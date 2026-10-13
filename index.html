@@ -29,6 +29,7 @@
       <span class="sel-label" id="sumSub">All counties</span>
     </div>
     <div class="kpis" id="stats"></div>
+    <div class="qpop" id="qpop" role="tooltip" hidden></div>
   </section>
 
   <div class="main">
@@ -80,6 +81,40 @@
       </section>
     </aside>
   </div>
+
+  <section class="card method" id="methodology" aria-labelledby="method-h">
+    <div class="method-head">
+      <h2 class="kicker" id="method-h">Methodology</h2>
+      <div class="gold"></div>
+    </div>
+    <div class="method-grid">
+      <div class="method-col">
+        <h3>AI exposure <span>Brookings Institution</span></h3>
+        <p>Brookings measures how much of the work in each county overlaps with what generative AI can do. It starts from occupation-level exposure ratings produced by OpenAI researchers (Eloundou et al., 2023), who scored the tasks in each occupation by whether a large language model could perform them or cut the time they take substantially. Brookings matched those ratings to 738 occupation codes in the BLS Occupational Employment and Wage Statistics (OEWS) and averaged them where several detailed titles share one code.</p>
+        <p>For each county, Brookings multiplies employment in every occupation by that occupation's exposure rating and adds the results. That sum is <strong>AI-exposed jobs</strong>. It is a weighted count, not a headcount of individual workers, which is why it is not a whole number. <strong>AI exposure share</strong> is AI-exposed jobs divided by total jobs in the county. Across U.S. counties it runs from about 20% to 47%; exposure is highest in places with many office, professional, finance and tech jobs.</p>
+        <p class="caveat">Exposure is not a forecast of job losses. A highly exposed job may be automated in part, made more productive by AI tools, or both. The ratings reflect model capabilities as of 2023.</p>
+        <p class="cite">Mark Muro, Shriya Methkupally and Molly Kinder, “The geography of generative AI’s workforce impacts will likely differ from those of previous technologies,” Brookings Institution, February 19, 2025.</p>
+      </div>
+      <div class="method-col">
+        <h3>Labor market distress <span>W.E. Upjohn Institute</span></h3>
+        <p>Upjohn measures distress with a single number: the <strong>prime-age employment rate</strong>, the share of civilians aged 25 to 54 who have a job. Focusing on this age group removes most of the effect of students and retirees, so the rate shows how well a local economy provides work for people who are generally expected to work. Unlike the unemployment rate, it also counts people who have given up looking for a job.</p>
+        <p>The rates come from the Census Bureau’s American Community Survey, 2015–2019 five-year estimates, a period close to the peak of the last business cycle (ACS collection was disrupted in 2020). Upjohn sorts every place into five levels using the same cutoffs everywhere, set from the distribution of population across local labor markets:</p>
+        <table class="method-table">
+          <thead><tr><th scope="col">Upjohn level</th><th scope="col">Prime-age employment rate</th><th scope="col">This dashboard</th></tr></thead>
+          <tbody>
+            <tr><td>Fully employed</td><td>82.8% or higher</td><td class="grp" rowspan="2">Healthy</td></tr>
+            <tr><td>Close to fully employed</td><td>80% to 82.8%</td></tr>
+            <tr><td>Marginally distressed</td><td>76.5% to 80%</td><td class="grp">Marginal</td></tr>
+            <tr><td>Distressed</td><td>72.3% to 76.5%</td><td class="grp" rowspan="2">Distressed</td></tr>
+            <tr><td>Severely distressed</td><td>below 72.3%</td></tr>
+          </tbody>
+        </table>
+        <p>This map uses each county’s own rate. Upjohn also reports rates for state-based local labor markets (metro areas split at state lines, with each rural county on its own), which appear in the map tooltip as the county’s labor market.</p>
+        <p class="caveat">Upjohn calls the cutoffs inherently arbitrary: a county just above a line is not meaningfully different from one just below it. Rates in small counties rest on small survey samples and can be noisy.</p>
+        <p class="cite">W.E. Upjohn Institute for Employment Research, Local Labor Market Distress Dataset, based on Timothy J. Bartik, “Using Place-Based Jobs Policies to Help Distressed Communities” (2020).</p>
+      </div>
+    </div>
+  </section>
 </main>
 
 <footer class="foot">

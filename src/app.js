@@ -228,12 +228,37 @@ function stats(){
     ["Counties", num(fs.length), num(fs.length)],
     ["Population", compact(pop), num(pop)],
     ["Total jobs", compact(tj), num(tj)],
-    ["AI-exposed jobs", compact(ej), num(ej)],
-    ["Exposure share (job-weighted)", eb ? pct(ej/eb) : "n/a", ""]
+    ["AI-exposed jobs", compact(ej), num(ej), "ej"],
+    ["Exposure share (job-weighted)", eb ? pct(ej/eb) : "n/a", "", "es"]
   ];
-  if (!sel) kpis.push(["Correlation, exposure vs. employment rate", r==null ? "n/a" : "r = "+r.toFixed(2).replace("-","−"), "Pearson correlation across counties"]);
-  document.getElementById("stats").innerHTML = kpis.map(([k,v,t]) => `<div class="kpi" title="${t}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
+  if (!sel) kpis.push(["Correlation, exposure vs. employment rate", r==null ? "n/a" : "r = "+r.toFixed(2).replace("-","−"), "", "r"]);
+  document.getElementById("stats").innerHTML = kpis.map(([k,v,t,q]) => `<div class="kpi"${t ? ` title="${t}"` : ""}><div class="k">${k}${q ? ` <button type="button" class="qm" data-def="${q}" aria-label="What does “${k}” mean?">?</button>` : ""}</div><div class="v">${v}</div></div>`).join("");
 }
+
+// Term definitions for the "?" buttons in the summary strip
+const DEFS = {
+  ej: "Brookings Institution estimate: employment in each occupation multiplied by that occupation's generative AI exposure rating (the share of its work AI could do or speed up substantially), summed across the counties shown. It is a weighted count, not a headcount, and exposed does not mean the job will be lost. See Methodology below.",
+  es: "AI-exposed jobs divided by total jobs across the counties shown. It is weighted by jobs, so larger counties count more; it is not the average of county percentages.",
+  r: "Pearson correlation (r) between each county's AI exposure share and its prime-age (25–54) employment rate, with every county counted equally. It runs from −1 to 1: positive means more-exposed counties tend to have higher employment, negative means lower, and near 0 means little relationship."
+};
+const qpop = document.getElementById("qpop"), statsEl = document.getElementById("stats");
+function showDef(b){
+  qpop.textContent = DEFS[b.dataset.def];
+  qpop.hidden = false;
+  const r = b.getBoundingClientRect(), w = qpop.offsetWidth, h = qpop.offsetHeight;
+  const x = Math.max(8, Math.min(r.left + r.width/2 - w/2, document.documentElement.clientWidth - w - 8));
+  const y = r.bottom + 8 + h > window.innerHeight ? r.top - h - 8 : r.bottom + 8;
+  qpop.style.transform = `translate(${x}px,${y}px)`;
+  b.setAttribute("aria-describedby", "qpop");
+}
+function hideDef(){ qpop.hidden = true; statsEl.querySelectorAll(".qm[aria-describedby]").forEach(b => b.removeAttribute("aria-describedby")); }
+statsEl.addEventListener("pointerover", e => { const b = e.target.closest(".qm"); if (b) showDef(b); });
+statsEl.addEventListener("pointerout", e => { if (e.target.closest(".qm")) hideDef(); });
+statsEl.addEventListener("focusin", e => { const b = e.target.closest(".qm"); if (b) showDef(b); });
+statsEl.addEventListener("focusout", hideDef);
+statsEl.addEventListener("click", e => { const b = e.target.closest(".qm"); if (b) showDef(b); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") hideDef(); });
+window.addEventListener("scroll", hideDef, {passive:true});
 function corr(x,y){const mx=d3.mean(x),my=d3.mean(y);let a=0,b=0,c=0;for(let i=0;i<x.length;i++){const dx=x[i]-mx,dy=y[i]-my;a+=dx*dy;b+=dx*dx;c+=dy*dy}return a/Math.sqrt(b*c)}
 
 // Top list
