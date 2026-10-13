@@ -27,13 +27,13 @@ function largest(id){
 }
 // Largest-industry view: 11 sector groups ranked; small groups fold into "Other" for color only.
 const LCAT = [
-  {key:"Government", c:"#1E3A65", dark:true},
-  {key:"Trade, transportation & utilities", c:"#5BC0BE"},
-  {key:"Manufacturing", c:"#9085E9"},
-  {key:"Private education & health care", c:"#B5179E", dark:true},
-  {key:"Leisure & hospitality", c:"#EDA100"},
-  {key:"Agriculture, forestry & mining", c:"#008300", dark:true},
-  {key:"Other", c:"#8E8D86", note:"Professional services, construction, finance, information, other services"}
+  {key:"Government", c:"#092B5F"},
+  {key:"Trade, transportation & utilities", c:"#7FA2D6"},
+  {key:"Manufacturing", c:"#2E6F7E"},
+  {key:"Private education & health care", c:"#FFB739"},
+  {key:"Leisure & hospitality", c:"#B26A00"},
+  {key:"Agriculture, forestry & mining", c:"#8C7A5B"},
+  {key:"Other", c:"#A7A9AE", note:"Professional services, construction, finance, information, other services"}
 ];
 const LCAT_IDX = new Map(LCAT.map((d,i)=>[d.key,i]));
 const catOf = lbl => LCAT_IDX.has(lbl) ? lbl : "Other";
@@ -47,8 +47,8 @@ function topInfo(id){
 const TOPI = {}; Object.keys(IND).forEach(id => TOPI[id] = topInfo(id));
 const pct = v => v==null ? "n/a" : (v*100).toFixed(1)+"%";
 const num = d3.format(",");
-document.getElementById("q1").textContent = pct(Q1);
-document.getElementById("q2").textContent = pct(Q2);
+const compact = n => n >= 1e9 ? (n/1e9).toFixed(2)+"B" : n >= 1e6 ? (n/1e6).toFixed(1)+"M" : num(n);
+document.getElementById("terciles").textContent = `low < ${pct(Q1)}, mid ${pct(Q1)}–${pct(Q2)}, high ≥ ${pct(Q2)}`;
 
 // Bivariate palette: columns = exposure (low→high, toward gold), rows = distress (healthy→distressed, toward navy)
 const BI = [
@@ -56,7 +56,6 @@ const BI = [
   ["#AFBBD0","#B9A887","#B98935"],
   ["#5E79A6","#68667A","#4A3B2C"]
 ];
-const DARKCELL = new Set(["2-0","2-1","2-2","1-2"]);
 const EXP_LBL = ["Low","Mid","High"], DIS_LBL = ["Healthy","Marginal","Distressed"];
 const CAT5 = ["Fully employed","Close to fully employed","Marginally distressed","Distressed","Severely distressed"];
 const CAT5C = ["#DDE3EC","#AFBBD0","#8297BB","#4F6A98","#1E3A65"];
@@ -68,20 +67,21 @@ const ds = r => r < .765 ? 2 : r < .80 ? 1 : 0;
 
 const counties = topojson.feature(TOPO, TOPO.objects.counties).features;
 counties.forEach(f => { const r = R[f.id]; f.d = r; if (r) { f.ex = r[5]==null ? null : ex(r[2]); f.ds = r[5]==null ? null : ds(r[5]); } });
+const byId = new Map(counties.map(f => [f.id, f]));
 const path = d3.geoPath();
 const svg = d3.select("#map"), g = svg.append("g");
-const cg = g.append("g");
-const paths = cg.selectAll("path").data(counties).join("path").attr("class","county").attr("d",path);
+const defs = svg.append("defs");
+const pat = defs.append("pattern").attr("id","hatch").attr("patternUnits","userSpaceOnUse").attr("width",4).attr("height",4).attr("patternTransform","rotate(45)");
+pat.append("rect").attr("width",1.4).attr("height",4).attr("fill","#FFFFFF");
+const paths = g.append("g").selectAll("path").data(counties).join("path").attr("class","county").attr("d",path);
+const hatch = g.append("path").attr("fill","url(#hatch)").style("pointer-events","none");
 g.append("path").attr("class","states").attr("d", path(topojson.mesh(TOPO, TOPO.objects.states, (a,b)=>a!==b)));
 g.append("path").attr("class","states").attr("d", path(topojson.mesh(TOPO, TOPO.objects.nation)));
-const defs = svg.append("defs");
-defs.append("pattern").attr("id","hatch").attr("patternUnits","userSpaceOnUse").attr("width",3).attr("height",3).attr("patternTransform","rotate(45)")
-  .append("rect").attr("width",1).attr("height",3).attr("fill","#FFFFFF").attr("fill-opacity",0.75);
-const hatch = g.append("path").attr("class","hatch").attr("fill","url(#hatch)").style("pointer-events","none");
-g.selectAll(".states").raise();
-const hover = g.append("path").attr("class","hover");
+const pinLine = g.append("path").attr("class","outline");
+const hoverLine = g.append("path").attr("class","outline");
 
-let view = "bi", sel = null; // sel = {ex,ds} or {cat5}
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let view = "bi", sel = null; // sel = {ex,ds}, {cat} or {ind}
 function fill(f){
   if (!f.d) return NA;
   if (view==="bi") return f.ex==null ? NA : BI[f.ds][f.ex];
@@ -96,8 +96,11 @@ function inSel(f){
   if (view==="gv") return TOPI[f.id] ? TOPI[f.id].cat===sel.ind : false;
   return true;
 }
+let painted = false;
 function render(){
-  paths.attr("fill", fill).classed("dim", f => !inSel(f));
+  const t = painted && !reduce ? paths.transition().duration(200) : paths;
+  t.attr("fill", fill).attr("opacity", f => inSel(f) ? 1 : 0.12);
+  painted = true;
   hatch.attr("d", view==="gv" ? path({type:"FeatureCollection", features:counties.filter(f => TOPI[f.id] && !TOPI[f.id].sure && inSel(f))}) : null);
   legend(); stats(); indPanel();
 }
@@ -118,14 +121,21 @@ function mixOf(ids){
   ids.forEach(id => { const r = IND[id]; for (let k=0;k<14;k++) out[k] += r[k]/r[14]; });
   return out.map(v => v/ids.length);
 }
+function setPinned(id){
+  pinned = id;
+  pinLine.attr("d", id ? path(byId.get(id)) : null);
+  indPanel();
+}
 function indPanel(){
   const pin = document.getElementById("pin"), sub = document.getElementById("indSub"), el = document.getElementById("ind");
   document.getElementById("wseg").style.display = pinned ? "none" : "";
   let ids, jobs;
   if (pinned){
     const d = R[pinned];
-    pin.innerHTML = `<div class="pinned"><span><b>${d[0]}</b></span><button id="unpin">Show selection</button></div>`;
-    document.getElementById("unpin").onclick = () => { pinned = null; hover.attr("d", null); indPanel(); };
+    pin.innerHTML = `<div class="pinned"><div style="min-width:0"><div class="pk">Pinned county</div><div class="pn">${d[0]}</div>
+      <div class="pm">${pct(d[2])} exposed · emp. ${pct(d[5])} · ${CAT5.includes(d[6]) ? d[6] : "n/a"}</div></div>
+      <button type="button" id="unpin">Show selection</button></div>`;
+    document.getElementById("unpin").onclick = () => setPinned(null);
     ids = IND[pinned] ? [pinned] : [];
     jobs = IND[pinned] ? IND[pinned][14] : 0;
     sub.textContent = ids.length ? `${num(jobs)} jobs located in the county, 2024.` : "";
@@ -135,60 +145,69 @@ function indPanel(){
     jobs = d3.sum(ids, id => IND[id][14]);
     sub.textContent = `${document.getElementById("sumSub").textContent}: ${num(ids.length)} counties, ${num(jobs)} jobs. Click a county on the map to see it alone.`;
   }
-  const us = weight === "pool" || pinned ? US_POOL : US_AVG;
-  document.getElementById("usKey").textContent = us === US_POOL ? "U.S. overall" : "Average U.S. county";
-  const m = pinned ? (ids.length ? ids.map(id => IND[id].slice(0,14).map(v => v/IND[id][14]))[0] : null) : mixOf(ids);
-  if (!m){ el.innerHTML = `<p class="sub" style="margin:0">No BLS employment data for this area.</p>`; return; }
-  const max = Math.max(d3.max(m), d3.max(us));
-  let html = "", grp = "";
-  SECT.forEach(s => {
-    if (s.nd && m[s.k] < 0.0005) return;
-    if (s.g !== grp){ grp = s.g; html += `<div class="grp">${grp === "Government" ? "Government · " + pct(m[0]+m[1]+m[2]) : "Private employers"}</div>`; }
-    const w = (m[s.k]/max*100).toFixed(1), t = (us[s.k]/max*100).toFixed(1);
-    html += `<div class="r ${s.nd?"nd":""}" title="${s.lbl}: ${pct(m[s.k])} here vs. ${pct(us[s.k])} U.S.">
-      <span class="lbl">${s.lbl}</span><span class="val">${pct(m[s.k])} <small>U.S. ${pct(us[s.k])}</small></span>
-      <div class="bar" aria-hidden="true"><i class="${s.gov?"gov":""}" style="width:${w}%"></i>${s.nd?"":`<b style="left:${t}%"></b>`}</div></div>`;
-  });
-  el.innerHTML = html;
+  const avg = weight === "avg" && !pinned;
+  const us = avg ? US_AVG : US_POOL;
+  const m = pinned ? (ids.length ? IND[pinned].slice(0,14).map(v => v/IND[pinned][14]) : null) : mixOf(ids);
+  if (!m){ el.innerHTML = `<p class="empty">No BLS employment data for this area.</p>`; return; }
+  const shown = SECT.filter(s => !(s.nd && m[s.k] < 0.0005));
+  const max = Math.max(0.0001, ...shown.map(s => Math.max(m[s.k], us[s.k])));
+  const row = s => {
+    const w = (m[s.k]/max*100).toFixed(2), t = (us[s.k]/max*100).toFixed(2);
+    return `<div class="r" title="${s.lbl}: ${pct(m[s.k])} here vs. ${pct(us[s.k])} ${avg ? "avg. U.S. county" : "U.S."}">
+      <div class="top"><span class="lbl">${s.lbl}</span><span class="val"><b>${pct(m[s.k])}</b> <small>${avg ? "Avg." : "U.S."} ${pct(us[s.k])}</small></span></div>
+      <div class="bar" aria-hidden="true"><i class="${s.gov ? "gov" : s.nd ? "nd" : ""}" style="width:${w}%"></i>${s.nd ? "" : `<b style="left:${t}%"></b>`}</div></div>`;
+  };
+  el.innerHTML = `<div class="grp"><span>Government</span><span>${pct(m[0]+m[1]+m[2])}</span></div>
+    <div class="rows">${shown.filter(s=>s.gov).map(row).join("")}</div>
+    <div class="grp"><span>Private employers</span></div>
+    <div class="rows">${shown.filter(s=>!s.gov).map(row).join("")}</div>
+    <div class="ind-key"><span><i></i>This selection</span><span><b></b>${avg ? "Average U.S. county" : "U.S. overall"}</span></div>`;
 }
 
 // Legend
 function legend(){
   const el = document.getElementById("legendPanel");
+  const head = (t, s) => `<h2>${t}</h2><div class="gold"></div><p class="sub">${s}</p>`;
+  const op = on => on ? 1 : 0.2;
   if (view==="bi"){
     const cnt = d3.rollup(counties.filter(f=>f.d && f.ex!=null), v=>v.length, f=>f.ds+"-"+f.ex);
     let cells = "";
     for (let r=2;r>=0;r--) for (let c=0;c<3;c++){
-      const k=r+"-"+c, on = !sel || (sel.ex===c && sel.ds===r);
-      cells += `<button class="cell ${DARKCELL.has(k)?"dark":""} ${on?"":"off"}" style="background:${BI[r][c]}" data-r="${r}" data-c="${c}" aria-label="${DIS_LBL[r]} labor market, ${EXP_LBL[c]} AI exposure: ${cnt.get(k)||0} counties">${cnt.get(k)||0}</button>`;
+      const k=r+"-"+c, n = num(cnt.get(k)||0), on = !sel || (sel.ex===c && sel.ds===r);
+      const lbl = `${DIS_LBL[r]} labor market, ${EXP_LBL[c]} AI exposure: ${n} counties`;
+      cells += `<button type="button" class="cell" style="background:${BI[r][c]};color:${r===2?"#fff":"#1F2024"};opacity:${op(on)}" data-r="${r}" data-c="${c}" aria-pressed="${!!sel && on}" aria-label="${lbl}" title="${lbl}">${n}</button>`;
     }
-    el.innerHTML = `<h2>Legend</h2><p class="sub">Numbers are county counts. Click a square to isolate it.</p>
-      <div class="legend"><div class="ylab">Labor distress →</div><div class="grid3">${cells}</div>
-      <div class="ticks"><span>Low</span><span>Mid</span><span>High</span></div>
-      <div class="xtitle">AI exposure share →</div></div>`;
+    el.innerHTML = head("Legend", "Numbers are county counts. Click a square to isolate it.") +
+      `<div class="biv"><div class="ylab"><span class="axis">Labor distress →</span></div>
+        <div class="rlab"><span>Distressed</span><span>Marginal</span><span>Healthy</span></div>
+        <div><div class="grid3">${cells}</div>
+          <div class="ticks"><span>Low</span><span>Mid</span><span>High</span></div>
+          <div class="axis xtitle">AI exposure share →</div></div></div>`;
     el.querySelectorAll(".cell").forEach(b => b.onclick = () => {
       const r=+b.dataset.r, c=+b.dataset.c;
       sel = (sel && sel.ex===c && sel.ds===r) ? null : {ex:c, ds:r}; render();
     });
   } else if (view==="ex"){
     const stops = d3.range(0,1.01,.1).map(t=>expScale(0.27+t*0.09)).join(",");
-    el.innerHTML = `<h2>AI exposure share</h2><p class="sub">Share of county jobs exposed to generative AI.</p>
-      <div class="ramp" style="background:linear-gradient(90deg,${stops})"></div>
-      <div class="xlab" style="margin-top:4px"><span>≤27%</span><span>31.5%</span><span>≥36%</span></div>`;
+    el.innerHTML = head("AI exposure share", "Share of county jobs exposed to generative AI.") +
+      `<div class="ramp" style="background:linear-gradient(90deg,${stops})"></div>
+      <div class="ramp-lab"><span>≤27%</span><span>31.5%</span><span>≥36%</span></div>`;
   } else if (view==="gv"){
     const withD = counties.filter(f=>f.d && TOPI[f.id]);
     const cnt = d3.rollup(withD, v=>v.length, f=>TOPI[f.id].cat);
     const unsure = withD.filter(f=>!TOPI[f.id].sure).length;
-    el.innerHTML = `<h2>Largest industry</h2><p class="sub">Sector with the most jobs located in the county (BLS, 2024). Government combines federal, state and local. Click to isolate.</p>
-      <div class="cat">${LCAT.map(d=>`<div><button class="cell ${sel&&sel.ind!==d.key?"off":""}" style="width:16px;height:16px;aspect-ratio:auto;flex:none;background:${d.c}" data-k="${d.key}" aria-label="Isolate ${d.key}"></button><span>${d.key}${d.note?`<br><span style="color:var(--muted);font-size:11px">${d.note}</span>`:""}</span> <span style="color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums">${num(cnt.get(d.key)||0)}</span></div>`).join("")}
-      <div style="margin-top:4px"><i style="background:repeating-linear-gradient(45deg,#8E8D86 0 2px,#FFFFFF 2px 3.5px)"></i><span>Striped: BLS withheld enough jobs that a different sector could be largest</span> <span style="color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums">${num(unsure)}</span></div></div>`;
-    el.querySelectorAll(".cell").forEach(b => b.onclick = () => { sel = (sel && sel.ind===b.dataset.k) ? null : {ind:b.dataset.k}; render(); });
+    el.innerHTML = head("Largest industry", "Sector with the most jobs located in the county (BLS, 2024). Government combines federal, state and local. Click to isolate.") +
+      `<div class="cats">${LCAT.map(d=>{ const n = num(cnt.get(d.key)||0);
+        return `<button type="button" class="cat" style="opacity:${op(!sel || sel.ind===d.key)}" data-k="${d.key}" aria-pressed="${!!sel && sel.ind===d.key}" aria-label="Largest industry ${d.key}: ${n} counties"><i style="background:${d.c}"></i><span class="lbl">${d.key}${d.note?`<small>${d.note}</small>`:""}</span><span class="n">${n}</span></button>`; }).join("")}
+        <div class="hatch-row"><i></i><span class="lbl">Striped: BLS withheld enough jobs that a different sector could be largest</span><span class="n">${num(unsure)}</span></div></div>`;
+    el.querySelectorAll(".cat").forEach(b => b.onclick = () => { sel = (sel && sel.ind===b.dataset.k) ? null : {ind:b.dataset.k}; render(); });
   } else {
     const cnt = d3.rollup(counties.filter(f=>f.d), v=>v.length, f=>f.d[6]);
-    el.innerHTML = `<h2>Labor distress</h2><p class="sub">Prime-age employment rate ranking. Click to isolate.</p>
-      <div class="cat">${CAT5.map((c,i)=>`<div><button class="cell ${sel&&sel.cat!==c?"off":""}" style="width:16px;height:16px;aspect-ratio:auto;background:${CAT5C[i]}" data-c="${c}" aria-label="Isolate ${c}"></button>${c} <span style="color:var(--muted);margin-left:auto">${num(cnt.get(c)||0)}</span></div>`).join("")}</div>
-      <p class="sub" style="margin:8px 0 0">Thresholds: ≥82.8%, 80–82.8%, 76.5–80%, 72.3–76.5%, &lt;72.3%.</p>`;
-    el.querySelectorAll(".cell").forEach(b => b.onclick = () => { sel = (sel && sel.cat===b.dataset.c) ? null : {cat:b.dataset.c}; render(); });
+    el.innerHTML = head("Labor distress", "Prime-age employment rate ranking. Click to isolate.") +
+      `<div class="cats">${CAT5.map((c,i)=>{ const n = num(cnt.get(c)||0);
+        return `<button type="button" class="cat" style="opacity:${op(!sel || sel.cat===c)}" data-c="${c}" aria-pressed="${!!sel && sel.cat===c}" aria-label="${c}: ${n} counties"><i style="background:${CAT5C[i]}"></i><span class="lbl">${c}</span><span class="n">${n}</span></button>`; }).join("")}</div>
+      <p class="legend-note">Thresholds: ≥82.8%, 80–82.8%, 76.5–80%, 72.3–76.5%, &lt;72.3%.</p>`;
+    el.querySelectorAll(".cat").forEach(b => b.onclick = () => { sel = (sel && sel.cat===b.dataset.c) ? null : {cat:b.dataset.c}; render(); });
   }
 }
 
@@ -196,7 +215,8 @@ function legend(){
 let stateF = "";
 function stats(){
   const fs = counties.filter(f => f.d && inSel(f) && (!stateF || f.d[1]===stateF));
-  const ej = d3.sum(fs, f=>f.d[3]||0), tj = d3.sum(fs, f=>f.d[4]||0), pop = d3.sum(fs, f=>f.d[7]);
+  const tj = d3.sum(fs, f=>f.d[4]||0), pop = d3.sum(fs, f=>f.d[7]);
+  const withEx = fs.filter(f=>f.d[3]!=null), ej = d3.sum(withEx, f=>f.d[3]), eb = d3.sum(withEx, f=>f.d[4]||0);
   const valid = fs.filter(f=>f.d[2]!=null && f.d[5]!=null);
   const r = valid.length>2 ? corr(valid.map(f=>f.d[2]), valid.map(f=>f.d[5])) : null;
   let label = "All counties";
@@ -204,13 +224,15 @@ function stats(){
   if (sel && view==="ds") label = sel.cat;
   if (sel && view==="gv") label = "Largest industry: " + sel.ind;
   document.getElementById("sumSub").textContent = label + (stateF ? " · " + stateF : "");
-  document.getElementById("stats").innerHTML = `
-    <span>Counties</span><span>${num(fs.length)}</span>
-    <span>Population</span><span>${num(pop)}</span>
-    <span>Total jobs</span><span>${num(tj)}</span>
-    <span>AI-exposed jobs</span><span>${num(ej)}</span>
-    <span>Exposure share (job-weighted)</span><span>${tj?pct(ej/tj):"n/a"}</span>
-    ${sel ? "" : `<span>Correlation, exposure vs. employment rate</span><span>${r==null?"n/a":"r = "+r.toFixed(2)}</span>`}`;
+  const kpis = [
+    ["Counties", num(fs.length), num(fs.length)],
+    ["Population", compact(pop), num(pop)],
+    ["Total jobs", compact(tj), num(tj)],
+    ["AI-exposed jobs", compact(ej), num(ej)],
+    ["Exposure share (job-weighted)", eb ? pct(ej/eb) : "n/a", ""]
+  ];
+  if (!sel) kpis.push(["Correlation, exposure vs. employment rate", r==null ? "n/a" : "r = "+r.toFixed(2).replace("-","−"), "Pearson correlation across counties"]);
+  document.getElementById("stats").innerHTML = kpis.map(([k,v,t]) => `<div class="kpi" title="${t}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
 }
 function corr(x,y){const mx=d3.mean(x),my=d3.mean(y);let a=0,b=0,c=0;for(let i=0;i<x.length;i++){const dx=x[i]-mx,dy=y[i]-my;a+=dx*dy;b+=dx*dx;c+=dy*dy}return a/Math.sqrt(b*c)}
 
@@ -219,50 +241,68 @@ function topList(){
   const fs = counties.filter(f => f.d && f.ex===2 && f.ds===2 && (!stateF || f.d[1]===stateF))
     .sort((a,b)=>b.d[3]-a.d[3]).slice(0,10);
   const ol = document.getElementById("top");
-  ol.innerHTML = fs.length ? fs.map(f=>`<li data-id="${f.id}">${f.d[0]} <span class="n">${num(f.d[3])} jobs · ${pct(f.d[2])} · emp. ${pct(f.d[5])}</span></li>`).join("") : `<li style="list-style:none;margin-left:-20px;color:var(--muted)">None in this state.</li>`;
-  ol.querySelectorAll("li[data-id]").forEach(li => li.onclick = () => focusCounty(li.dataset.id));
+  ol.innerHTML = fs.length ? fs.map((f,i)=>`<li><button type="button" data-id="${f.id}"><span class="rk">${String(i+1).padStart(2,"0")}</span>
+    <span class="tx"><span class="nm">${f.d[0]}</span><span class="mt">${num(f.d[3])} jobs · ${pct(f.d[2])} · emp. ${pct(f.d[5])}</span></span></button></li>`).join("")
+    : `<li class="none">None in this state.</li>`;
+  ol.querySelectorAll("button[data-id]").forEach(b => b.onclick = () => focusCounty(b.dataset.id));
 }
 
 // Tooltip
-const tip = document.getElementById("tip"), box = document.getElementById("mapbox");
-function showTip(f, x, y){
+const tip = document.getElementById("tip"), wrap = document.getElementById("mapwrap");
+function showTip(f){
   const d = f.d; if (!d) return;
-  const sw = view==="bi" && f.ex!=null ? `<span class="sw" style="background:${BI[f.ds][f.ex]}"></span>${DIS_LBL[f.ds]} · ${EXP_LBL[f.ex]} exposure` : "";
-  tip.innerHTML = `<b>${d[0]}</b>
-    <div class="row"><span>AI exposure share</span><span>${pct(d[2])}</span></div>
-    <div class="row"><span>Exposed jobs</span><span>${d[3]==null?"n/a":num(d[3])} of ${d[4]==null?"n/a":num(d[4])}</span></div>
-    <div class="row"><span>Prime-age employment</span><span>${pct(d[5])}</span></div>
-    <div class="row"><span>Distress ranking</span><span>${d[6]}</span></div>
-    <div class="row"><span>Population</span><span>${num(d[7])}</span></div>
-    ${IND[f.id] ? (() => { const L = largest(f.id); return `<div class="row"><span>Government share of jobs</span><span>${pct(govShare(f.id))}</span></div>
-    <div class="row"><span>Largest sector</span><span style="text-align:right">${L.lbl} (${pct(L.share)})${TOPI[f.id] && !TOPI[f.id].sure ? "<br><span style='color:var(--muted);font-size:11px'>Uncertain: withheld jobs could change this</span>" : ""}</span></div>`; })() : ""}
-    <div style="margin-top:6px;color:var(--muted);font-size:12px">${sw ? sw + "<br>" : ""}Labor market: ${d[8]}</div>`;
+  const rows = [
+    ["AI exposure share", pct(d[2])],
+    ["Exposed jobs", d[3]==null ? "n/a" : `${num(d[3])} of ${d[4]==null ? "n/a" : num(d[4])}`],
+    ["Prime-age employment", pct(d[5])],
+    ["Distress ranking", CAT5.includes(d[6]) ? d[6] : "n/a"],
+    ["Population", num(d[7])]
+  ];
+  if (IND[f.id] && IND[f.id][14]){
+    const L = largest(f.id);
+    rows.push(["Government share of jobs", pct(govShare(f.id))], ["Largest sector", `${L.lbl} (${pct(L.share)})`]);
+  }
+  const unsure = TOPI[f.id] && !TOPI[f.id].sure;
+  const sw = view==="bi" && f.ex!=null ? `<div class="sw"><i style="background:${BI[f.ds][f.ex]}"></i><span>${DIS_LBL[f.ds]} · ${EXP_LBL[f.ex]} exposure</span></div>` : "";
+  tip.innerHTML = `<div class="name">${d[0]}</div>${rows.map(([k,v]) => `<div class="row"><span>${k}</span><span>${v}</span></div>`).join("")}
+    ${unsure ? `<div class="unsure">Uncertain: withheld jobs could change this</div>` : ""}
+    <div class="tfoot">${sw}<div>Labor market: ${d[8]}</div></div>`;
   tip.hidden = false;
-  const bb = box.getBoundingClientRect(), w = 280, h = tip.offsetHeight;
-  let lx = x - bb.left + 14, ly = y - bb.top + 14;
-  if (lx + w > bb.width) lx = x - bb.left - w - 14;
-  if (lx < 0) lx = 4;
-  if (ly + h > bb.height) ly = Math.max(4, y - bb.top - h - 14);
-  tip.style.left = lx+"px"; tip.style.top = ly+"px";
 }
-paths.on("pointermove", (e,f) => { hover.attr("d", path(f)); showTip(f, e.clientX, e.clientY); })
-     .on("pointerleave", () => { hover.attr("d", pinned ? path(counties.find(c=>c.id===pinned)) : null); tip.hidden = true; })
-     .on("click", (e,f) => { if (!f.d) return; pinned = f.id; hover.attr("d", path(f)); indPanel(); });
+function placeTip(mx, my){
+  const W = wrap.clientWidth, H = wrap.clientHeight, w = tip.offsetWidth || 280, h = tip.offsetHeight || 220;
+  let x = mx + 14 + w > W ? mx - 14 - w : mx + 14;
+  let y = my + 14 + h > H ? my - 14 - h : my + 14;
+  x = Math.max(4, Math.min(x, W - w - 4)); y = Math.max(4, y);
+  tip.style.transform = `translate(${x}px,${y}px)`;
+}
+function moveTip(e){ const r = wrap.getBoundingClientRect(); placeTip(e.clientX - r.left, e.clientY - r.top); }
+function hideTip(){ hoverLine.attr("d", null); tip.hidden = true; }
+paths.on("pointerenter", (e,f) => { hoverLine.attr("d", path(f)); if (f.d) { showTip(f); moveTip(e); } else tip.hidden = true; })
+     .on("pointermove", e => moveTip(e))
+     .on("click", (e,f) => { if (f.d) setPinned(f.id); });
+svg.on("pointerleave", hideTip);
 
 // Zoom
-const zoom = d3.zoom().scaleExtent([1,40]).translateExtent([[0,0],[975,610]]).on("zoom", e => g.attr("transform", e.transform));
+const zoom = d3.zoom().scaleExtent([1,40]).translateExtent([[0,0],[975,610]]).on("zoom", e => {
+  g.attr("transform", e.transform);
+  pat.attr("patternTransform", `scale(${1/e.transform.k}) rotate(45)`);
+});
 svg.call(zoom);
 function zoomTo(feat){
   const [[x0,y0],[x1,y1]] = path.bounds(feat);
   const k = Math.min(40, 0.9/Math.max((x1-x0)/975,(y1-y0)/610));
-  svg.transition().duration(reduce?0:650).call(zoom.transform, d3.zoomIdentity.translate(487.5,305).scale(k).translate(-(x0+x1)/2,-(y0+y1)/2));
+  return svg.transition().duration(reduce?0:650).call(zoom.transform, d3.zoomIdentity.translate(487.5,305).scale(k).translate(-(x0+x1)/2,-(y0+y1)/2));
 }
-const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function zoomOut(){ svg.transition().duration(reduce?0:650).call(zoom.transform, d3.zoomIdentity); }
 function focusCounty(id){
-  const f = counties.find(c=>c.id===id); if (!f) return;
-  zoomTo(f); hover.attr("d", path(f)); pinned = id; indPanel();
-  const [cx,cy] = path.centroid(f);
-  setTimeout(()=>{ const p = svg.node().createSVGPoint(); p.x=cx; p.y=cy; const s = p.matrixTransform(g.node().getScreenCTM()); showTip(f, s.x, s.y); }, reduce?0:700);
+  const f = byId.get(id); if (!f) return;
+  hideTip(); setPinned(id);
+  zoomTo(f).on("end", () => {
+    const [cx,cy] = d3.zoomTransform(svg.node()).apply(path.centroid(f));
+    const s = wrap.clientWidth / 975;
+    hoverLine.attr("d", path(f)); showTip(f); placeTip(cx*s, cy*s);
+  });
 }
 
 // State filter
@@ -273,7 +313,7 @@ stateNames.forEach(s => stSel.add(new Option(s, s)));
 stSel.onchange = () => {
   stateF = stSel.value;
   const sf = states.find(s => s.properties.name === stateF);
-  if (sf) zoomTo(sf); else svg.transition().duration(reduce?0:650).call(zoom.transform, d3.zoomIdentity);
+  if (sf) zoomTo(sf); else zoomOut();
   stats(); topList(); indPanel();
 };
 
@@ -283,13 +323,13 @@ document.getElementById("countylist").innerHTML = [...byName.keys()].sort().map(
 document.getElementById("search").onchange = e => { const id = byName.get(e.target.value); if (id) focusCounty(id); };
 
 document.getElementById("reset").onclick = () => {
-  sel = null; stateF = ""; stSel.value = ""; document.getElementById("search").value = ""; pinned = null;
-  hover.attr("d",null); tip.hidden = true;
-  svg.transition().duration(reduce?0:650).call(zoom.transform, d3.zoomIdentity); render(); topList();
+  sel = null; stateF = ""; stSel.value = ""; document.getElementById("search").value = "";
+  hideTip(); setPinned(null); zoomOut(); render(); topList();
 };
 
 // View toggle
 [["v-bi","bi"],["v-ex","ex"],["v-ds","ds"],["v-gv","gv"]].forEach(([id,v]) => document.getElementById(id).onclick = () => {
+  if (view === v) return;
   view = v; sel = null;
   document.querySelectorAll("#mapbox .seg button").forEach(b => b.setAttribute("aria-pressed", b.id===id));
   render();

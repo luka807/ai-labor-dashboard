@@ -1,0 +1,356 @@
+/* =========================================================================
+   Leadership Now Project — Colors & Type
+   --------------------------------------------------------------------------
+   Pulled from: brand logos, deck templates (Annual Summit, Business Plan,
+   Centrist Constituency Fund), and leadershipnowproject.org.
+   --------------------------------------------------------------------------
+   Fonts:
+     - Proxima Nova (display + body — brand font, self-hosted from fonts/)
+       Full family wired: 300 Light · 400 Regular · 500 Medium · 600 Semibold
+       · 700 Bold · 800 Extrabold, each with matching italics.
+     - Source Serif 4 (editorial headlines, callouts — used sparingly)
+     - JetBrains Mono (mono — self-hosted 400 from fonts/)
+   ========================================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap");
+
+/* Upright */
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("fonts/ProximaNova-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("fonts/ProximaNova-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("fonts/ProximaNova-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("fonts/ProximaNova-Semibold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("fonts/ProximaNova-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("fonts/ProximaNova-Extrabold.ttf") format("truetype");
+  font-weight: 800 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Italics */
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("fonts/ProximaNova-LightItalic.ttf") format("truetype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("fonts/ProximaNova-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("fonts/ProximaNova-MediumItalic.ttf") format("truetype");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("fonts/ProximaNova-SemiboldItalic.ttf") format("truetype");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("fonts/ProximaNova-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("fonts/ProximaNova-ExtraboldItalic.ttf") format("truetype");
+  font-weight: 800 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/JetBrainsMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---------- Brand colors ---------- */
+  /* Primary signature gold — used in logo mark and slide accent rule */
+  --lnp-gold:           #FFB739;
+  --lnp-gold-600:       #E89F1F; /* hover / press */
+  --lnp-gold-100:       #FFF1D6; /* tint / wash */
+
+  /* Dark navy family — primary text + brand surfaces */
+  --lnp-ink:            #1F2024; /* logo wordmark + body copy */
+  --lnp-navy-deep:      #092B5F; /* deepest brand navy (deck) */
+  --lnp-navy:           #003D4D; /* secondary brand navy (deck) */
+  --lnp-navy-mid:       #3260A9; /* lighter accent / link blue */
+
+  /* Neutrals */
+  --lnp-black:          #000000;
+  --lnp-white:          #FFFFFF;
+  --lnp-paper:          #F7F6F2; /* warm off-white (deck section bg) */
+  --lnp-gray-50:        #F3F3F3;
+  --lnp-gray-100:       #E8E8EA;
+  --lnp-gray-200:       #D1D2D6;
+  --lnp-gray-300:       #BFBFBF;
+  --lnp-gray-500:       #8A8C93;
+  --lnp-gray-700:       #565862;
+  --lnp-gray-900:       #1F2024;
+
+  /* ---------- Semantic ---------- */
+  --color-bg:           var(--lnp-white);
+  --color-bg-muted:     var(--lnp-paper);
+  --color-bg-dark:      var(--lnp-navy-deep);
+  --color-fg:           var(--lnp-ink);
+  --color-fg-muted:     var(--lnp-gray-700);
+  --color-fg-subtle:    var(--lnp-gray-500);
+  --color-fg-on-dark:   var(--lnp-white);
+  --color-border:       var(--lnp-gray-200);
+  --color-border-strong:var(--lnp-gray-300);
+  --color-accent:       var(--lnp-gold);
+  --color-accent-fg:    var(--lnp-ink);     /* text on gold = dark ink */
+  --color-link:         var(--lnp-navy-mid);
+  --color-link-hover:   var(--lnp-navy-deep);
+
+  /* Status (kept conservative — brand rarely uses them) */
+  --color-success:      #2F7D5B;
+  --color-warning:      #C77A19;
+  --color-danger:       #B33A3A;
+
+  /* ---------- Typography stacks ---------- */
+  --font-display:  "Proxima Nova", "Helvetica Neue", Arial, sans-serif;
+  --font-body:     "Proxima Nova", "Helvetica Neue", Arial, sans-serif;
+  --font-editorial:"Source Serif 4", "Source Serif Pro", Georgia, serif;
+  --font-mono:     "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Type scale (1.250 — major-third), 16px root */
+  --fs-12: 0.75rem;   /* 12 — eyebrow / micro */
+  --fs-14: 0.875rem;  /* 14 — caption */
+  --fs-16: 1rem;      /* 16 — body */
+  --fs-18: 1.125rem;  /* 18 — lead */
+  --fs-22: 1.375rem;  /* 22 — h5 */
+  --fs-28: 1.75rem;   /* 28 — h4 */
+  --fs-34: 2.125rem;  /* 34 — h3 */
+  --fs-44: 2.75rem;   /* 44 — h2 */
+  --fs-56: 3.5rem;    /* 56 — h1 */
+  --fs-72: 4.5rem;    /* 72 — display */
+
+  /* Line heights */
+  --lh-tight:   1.08; /* @kind font */
+  --lh-display: 1.12; /* @kind font */
+  --lh-snug:    1.25; /* @kind font */
+  --lh-normal:  1.45; /* @kind font */
+  --lh-relaxed: 1.6; /* @kind font */
+
+  /* Letter-spacing — Montserrat looks best with slight tracking on caps */
+  --tracking-eyebrow: 0.14em;
+  --tracking-display: -0.01em;
+  --tracking-h:       -0.005em;
+  --tracking-body:    0;
+
+  /* ---------- Spacing scale (4px base) ---------- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+  --s-20: 80px;
+  --s-24: 96px;
+  --s-32: 128px;
+
+  /* ---------- Radii ---------- */
+  --r-0: 0px;       /* default — brand favors sharp corners */
+  --r-1: 2px;       /* inputs */
+  --r-2: 4px;       /* buttons, small cards */
+  --r-3: 8px;       /* large cards */
+  --r-full: 999px;  /* pills / avatars */
+
+  /* ---------- Shadows ---------- */
+  /* Brand UI is mostly flat; shadows are very subtle */
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-2: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-3: 0 16px 40px rgba(15, 23, 42, 0.12);
+
+  /* ---------- Decorative rule (the iconic gold underline) ---------- */
+  --rule-gold-thickness: 6px;
+  --rule-gold-length:    72px;
+
+  /* ---------- Motion ---------- */
+  --ease-standard: cubic-bezier(0.2, 0.7, 0.2, 1); /* @kind other */
+  --ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */
+  --dur-fast: 120ms; /* @kind other */
+  --dur-base: 200ms; /* @kind other */
+  --dur-slow: 360ms; /* @kind other */
+}
+
+/* =========================================================================
+   Semantic typography — use these instead of raw font-size where possible
+   ========================================================================= */
+
+.lnp-eyebrow {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-12);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+
+.lnp-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-72);
+  line-height: var(--lh-display);
+  letter-spacing: var(--tracking-display);
+  color: var(--color-fg);
+  text-wrap: balance;
+}
+
+.lnp-h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-56);
+  line-height: var(--lh-display);
+  letter-spacing: var(--tracking-display);
+  color: var(--color-fg);
+  text-wrap: balance;
+}
+
+.lnp-h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-44);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-h);
+  color: var(--color-fg);
+  text-wrap: balance;
+}
+
+.lnp-h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-34);
+  line-height: var(--lh-snug);
+  color: var(--color-fg);
+}
+
+.lnp-h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-28);
+  line-height: var(--lh-snug);
+  color: var(--color-fg);
+}
+
+.lnp-h5 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-22);
+  line-height: var(--lh-snug);
+  color: var(--color-fg);
+}
+
+.lnp-lead {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--fs-18);
+  line-height: var(--lh-relaxed);
+  color: var(--color-fg);
+}
+
+.lnp-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--fs-16);
+  line-height: var(--lh-relaxed);
+  color: var(--color-fg);
+}
+
+.lnp-small {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--fs-14);
+  line-height: var(--lh-normal);
+  color: var(--color-fg-muted);
+}
+
+.lnp-caption {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--fs-12);
+  line-height: var(--lh-normal);
+  color: var(--color-fg-subtle);
+}
+
+.lnp-editorial-quote {
+  font-family: var(--font-editorial);
+  font-weight: 400;
+  font-style: italic;
+  font-size: var(--fs-28);
+  line-height: var(--lh-snug);
+  color: var(--color-fg);
+}
+
+/* The iconic gold underline used under title-slide titles and section heads */
+.lnp-rule-gold {
+  display: block;
+  width: var(--rule-gold-length);
+  height: var(--rule-gold-thickness);
+  background: var(--lnp-gold);
+  border: 0;
+  margin: var(--s-4) 0 var(--s-6);
+}
+
+/* Slide title-card label (e.g. "AGENDA", "CENTRIST CONSTITUENCY FUND") */
+.lnp-slide-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 42px;
+  line-height: var(--lh-tight);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--color-fg);
+}
