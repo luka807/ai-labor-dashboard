@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Exposure, Distress &amp; Industry</title>
+<link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">Internal · AI Tax Policy research</div>
+  <h1>Generative AI exposure vs. local labor market distress</h1>
+  <div class="rule"></div>
+  <p>Each U.S. county is shaded by two measures at once: the share of jobs exposed to generative AI (Brookings) and the prime-age (25–54) employment rate (W.E. Upjohn Institute). Darkest counties are both highly exposed and economically distressed. Click any county, or isolate a group, to see which industries its jobs are in (BLS).</p>
+</header>
+
+<div class="main">
+  <div class="mapbox" id="mapbox">
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Map view">
+        <button id="v-bi" aria-pressed="true">Overlay</button>
+        <button id="v-ex" aria-pressed="false">AI exposure</button>
+        <button id="v-ds" aria-pressed="false">Labor distress</button>
+        <button id="v-gv" aria-pressed="false">Largest industry</button>
+      </div>
+      <div class="spacer"></div>
+      <select id="state" aria-label="Zoom to state"><option value="">All states</option></select>
+      <input id="search" list="countylist" placeholder="Find a county…" aria-label="Find a county" size="16">
+      <datalist id="countylist"></datalist>
+      <button class="btn" id="reset">Reset</button>
+    </div>
+    <svg id="map" viewBox="0 0 975 610" role="img" aria-label="County map of the United States"></svg>
+    <div class="tip" id="tip" hidden></div>
+    <div class="note">Scroll or pinch to zoom, drag to pan. Click a legend square to isolate that group. Click a county to see its industry mix.</div>
+  </div>
+
+  <aside>
+    <div class="panel" id="legendPanel"></div>
+    <div class="panel">
+      <h2 id="sumTitle">Selection summary</h2>
+      <p class="sub" id="sumSub">All counties</p>
+      <div class="stat" id="stats"></div>
+    </div>
+    <div class="panel" id="indPanel">
+      <div class="ind-head">
+        <h2 style="margin:0">Industry mix of local jobs</h2>
+        <div class="seg" role="group" aria-label="How to combine counties" id="wseg">
+          <button id="w-pool" aria-pressed="true">All jobs</button>
+          <button id="w-avg" aria-pressed="false">Avg. county</button>
+        </div>
+      </div>
+      <div id="pin"></div>
+      <p class="sub" id="indSub"></p>
+      <div class="ind" id="ind"></div>
+      <div class="ind-key"><span><i></i>This selection</span><span><b></b><span id="usKey">U.S. overall</span></span></div>
+    </div>
+    <div class="panel">
+      <h2>Most exposed jobs in distressed counties</h2>
+      <p class="sub">High-exposure tercile and prime-age employment below 76.5%, ranked by number of AI-exposed jobs. Click to locate.</p>
+      <ol class="top" id="top"></ol>
+    </div>
+  </aside>
+</div>
+
+<div class="foot">
+  <p><b>Sources.</b> Generative AI exposure: Brookings Institution, county estimates of jobs exposed to generative AI (exposure_share = exposed jobs ÷ total jobs). Labor distress: W.E. Upjohn Institute for Employment Research, Local Labor Market Distress Dataset, county prime-age employment rate and distress ranking.</p>
+  <p><b>Classes.</b> Exposure is split into county terciles (low &lt; <span id="q1"></span>, high ≥ <span id="q2"></span>). Distress uses the dataset's own thresholds: healthy ≥ 80% prime-age employment (Fully or Close to fully employed), marginal 76.5–80%, distressed &lt; 76.5% (Distressed or Severely distressed). Valdez-Cordova, AK and Kalawao, HI have no exposure estimate; Loving, TX has no employment rate. These are shown in gray.</p>
+  <p><b>Industry mix.</b> U.S. Bureau of Labor Statistics, Quarterly Census of Employment and Wages (QCEW), 2024 annual average employment by county, counted where the jobs are located (the same basis as the AI exposure measure). Connecticut uses 2023 because BLS now reports its planning regions instead of counties. Government is grouped by level (federal civilian, state, local), so public school teachers and public hospital staff appear under government, and the private education and health line covers private employers only. Active-duty military are not counted. When BLS withholds a sector to protect employer confidentiality, those jobs appear as "Not disclosed." "All jobs" pools every job in the selection, so large counties dominate; "Avg. county" weights each county equally. On the Largest industry map, a county is striped when the jobs BLS withheld exceed the gap between its top two sectors, so the withheld jobs could change which sector ranks first.</p>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script src="data/counties-topo.js"></script>
+<script src="data/county-data.js"></script>
+<script src="data/county-industry.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>

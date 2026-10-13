@@ -1,0 +1,83 @@
+/* Layout: header strip, then map (left, wide) + control/legend rail (right); stacks at phone width. Squared corners per brand. */
+:root{
+  --bg:#F5F5F5; --surface:#FFFFFF; --fg:#212121; --muted:#595A55; --line:#D9D9D4;
+  --navy:#1E3A65; --gold:#FFB638; --stroke:#FFFFFF; --state:#FFFFFF; --hl:#212121;
+  --track:#EDEDEA; --govbar:#4F6A98; --tick:#B26A00; --ndbar:#C9C9C4; --pinbg:#FFF4DE;
+  --font:'Helvetica Neue',Helvetica,Arial,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.5;padding:24px 16px 40px}
+.wrap{max-width:1290px;margin:0 auto;display:grid;gap:24px}
+header .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+header h1{margin:4px 0 0;font-size:26px;line-height:1.2;color:var(--navy);text-wrap:balance}
+header .rule{width:64px;height:2px;background:var(--gold);margin:12px 0}
+header p{margin:0;max-width:75ch;color:var(--muted)}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+.mapbox{background:var(--surface);border:1px solid var(--line);position:relative;min-width:0;overflow:hidden}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;border-bottom:1px solid var(--line)}
+.seg{display:flex;border:1px solid var(--line)}
+.seg button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--fg);padding:6px 12px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--navy);color:var(--surface)}
+select,input,.btn{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:0}
+.btn{cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible,.cell:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.spacer{flex:1}
+svg#map{display:block;width:100%;height:auto;touch-action:none}
+.county{stroke:var(--stroke);stroke-width:.25;vector-effect:non-scaling-stroke}
+.county.dim{opacity:.12}
+.states{fill:none;stroke:var(--state);stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
+.hover{fill:none;stroke:var(--hl);stroke-width:1.5;vector-effect:non-scaling-stroke;pointer-events:none}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);box-shadow:0 4px 16px rgba(0,0,0,.18);padding:10px 12px;font-size:13px;width:280px;z-index:5}
+.tip b{display:block;font-size:14px;margin-bottom:4px}
+.tip .row{display:flex;justify-content:space-between;gap:8px;font-variant-numeric:tabular-nums}
+.tip .row span:first-child{color:var(--muted)}
+.tip .sw{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:-1px}
+.note{padding:8px 12px;font-size:12px;color:var(--muted);border-top:1px solid var(--line)}
+aside{display:grid;gap:16px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);padding:16px}
+.panel h2{margin:0 0 4px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--navy)}
+.panel .sub{font-size:12px;color:var(--muted);margin:0 0 12px}
+.legend{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:end}
+.ylab{writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;color:var(--muted);text-align:center;align-self:center}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.cell{aspect-ratio:1;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font:600 12px var(--font);font-variant-numeric:tabular-nums;color:rgba(0,0,0,.65);padding:0}
+.cell.dark{color:rgba(255,255,255,.9)}
+.cell.off{opacity:.2}
+.xlab{grid-column:2;display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.xtitle{grid-column:2;text-align:center;font-size:11px;color:var(--muted)}
+.ticks{display:grid;grid-template-columns:repeat(3,1fr);font-size:10px;color:var(--muted);text-align:center;grid-column:2}
+.ramp{height:12px}
+.cat{display:grid;gap:4px;font-size:13px}
+.cat div{display:flex;align-items:center;gap:8px}
+.cat i{width:14px;height:14px;display:inline-block}
+.stat{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:13px;font-variant-numeric:tabular-nums}
+.stat span:nth-child(odd){color:var(--muted)}
+ol.top{margin:0;padding-left:20px;font-size:13px;display:grid;gap:4px}
+ol.top li{cursor:pointer}
+ol.top li:hover{text-decoration:underline}
+ol.top .n{color:var(--muted);font-variant-numeric:tabular-nums}
+.ind-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ind-head .seg button{padding:4px 8px;font-size:12px}
+.ind{display:grid;gap:6px}
+.ind .grp{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.ind .grp:first-child{margin-top:0}
+.ind .r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:center;font-size:12px}
+.ind .r .lbl{min-width:0;line-height:1.25}
+.ind .r .val{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ind .r .val small{color:var(--muted);font-size:11px}
+.ind .bar{grid-column:1 / -1;position:relative;height:8px;background:var(--track)}
+.ind .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--navy);border-radius:0 2px 2px 0}
+.ind .bar i.gov{background:var(--govbar)}
+.ind .bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--tick);margin-left:-1px}
+.ind .r.nd .bar i{background:var(--ndbar)}
+.ind-key{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:10px}
+.ind-key span{display:inline-flex;align-items:center;gap:6px}
+.ind-key i{display:inline-block;width:12px;height:8px;background:var(--navy)}
+.ind-key b{display:inline-block;width:2px;height:12px;background:var(--tick)}
+.pinned{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:12px;background:var(--pinbg);padding:6px 8px;margin-bottom:10px}
+.pinned button{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:2px 8px;cursor:pointer}
+.foot{font-size:12px;color:var(--muted);max-width:90ch}
+.foot p{margin:0 0 6px}
