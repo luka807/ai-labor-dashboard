@@ -33,6 +33,7 @@
   </section>
 
   <div class="main">
+    <div class="mapcol">
     <section class="card mapbox" id="mapbox" aria-label="County map">
       <div class="toolbar">
         <div class="seg" role="group" aria-label="Map view">
@@ -53,54 +54,57 @@
         <svg id="map" viewBox="0 0 975 610" role="img" aria-label="Map of U.S. counties shaded by the selected measure"></svg>
         <div class="tip" id="tip" role="status" hidden></div>
       </div>
-      <p class="note">Scroll or pinch to zoom, drag to pan. Click a legend square to isolate that group. Click a county to see its industry mix.</p>
+      <p class="note">Scroll or pinch to zoom, drag to pan. Click a legend square to isolate that group. Click a county to see its industry mix below.</p>
     </section>
 
-    <aside>
-      <section class="card panel" id="legendPanel"></section>
-
-      <section class="card panel" id="indPanel">
-        <div class="panel-head">
-          <h2>Industry mix of local jobs</h2>
+    <details class="card drop" id="indPanel">
+      <summary><span class="drop-t">Industry mix of local jobs</span><span class="drop-meta" id="indMeta"></span></summary>
+      <div class="drop-body">
+        <div class="drop-tools">
+          <p class="sub" id="indSub"></p>
           <div class="seg seg-sm" role="group" aria-label="Weighting" id="wseg">
             <button type="button" id="w-pool" aria-pressed="true">All jobs</button>
             <button type="button" id="w-avg" aria-pressed="false">Avg. county</button>
           </div>
         </div>
-        <div class="gold"></div>
         <div id="pin"></div>
-        <p class="sub" id="indSub"></p>
         <div class="ind" id="ind"></div>
-      </section>
+      </div>
+    </details>
 
-      <section class="card panel">
-        <h2>Most exposed jobs in distressed counties</h2>
-        <div class="gold"></div>
-        <p class="sub">High-exposure tercile and prime-age employment below 76.5%, ranked by number of AI-exposed jobs. Click to locate.</p>
+    <details class="card drop" id="topPanel">
+      <summary><span class="drop-t">Most exposed jobs in distressed counties</span><span class="drop-meta" id="topMeta"></span></summary>
+      <div class="drop-body">
+        <p class="sub">High-exposure tercile and prime-age employment below 76.5%, ranked by number of AI-exposed jobs. Click a county to locate it on the map.</p>
         <ol class="top" id="top"></ol>
-      </section>
+      </div>
+    </details>
+    </div>
+
+    <aside>
+      <section class="card panel" id="legendPanel"></section>
     </aside>
   </div>
+</main>
 
-  <section class="card method" id="methodology" aria-labelledby="method-h">
+<footer class="foot" id="methodology" aria-labelledby="method-h">
+  <div class="foot-in">
     <div class="method-head">
-      <h2 class="kicker" id="method-h">Methodology</h2>
+      <h2 id="method-h">Methodology</h2>
       <div class="gold"></div>
     </div>
     <div class="method-grid">
       <div class="method-col">
         <h3>AI exposure <span>Brookings Institution</span></h3>
-        <p>Brookings measures how much of the work in each county overlaps with what generative AI can do. It starts from occupation-level exposure ratings produced by OpenAI researchers (Eloundou et al., 2023), who scored the tasks in each occupation by whether a large language model could perform them or cut the time they take substantially. Brookings matched those ratings to 738 occupation codes in the BLS Occupational Employment and Wage Statistics (OEWS) and averaged them where several detailed titles share one code.</p>
-        <p>For each county, Brookings multiplies employment in every occupation by that occupation's exposure rating and adds the results. That sum is <strong>AI-exposed jobs</strong>. It is a weighted count, not a headcount of individual workers, which is why it is not a whole number. <strong>AI exposure share</strong> is AI-exposed jobs divided by total jobs in the county. Across U.S. counties it runs from about 20% to 47%; exposure is highest in places with many office, professional, finance and tech jobs.</p>
-        <p class="caveat">Exposure is not a forecast of job losses. A highly exposed job may be automated in part, made more productive by AI tools, or both. The ratings reflect model capabilities as of 2023.</p>
-        <p class="cite">Mark Muro, Shriya Methkupally and Molly Kinder, “The geography of generative AI’s workforce impacts will likely differ from those of previous technologies,” Brookings Institution, February 19, 2025.</p>
+        <p>Brookings starts from occupation-level ratings by OpenAI researchers (Eloundou et al., 2023) of how much of each occupation's tasks a large language model could perform or substantially speed up. It matches the ratings to 738 occupation codes in the BLS Occupational Employment and Wage Statistics and averages them where several job titles share a code.</p>
+        <p><strong>AI-exposed jobs</strong> in a county is employment in each occupation multiplied by that occupation's rating, summed. It is a weighted count, not a headcount. <strong>AI exposure share</strong> is AI-exposed jobs divided by total jobs; across counties it runs from about 20% to 47%. Exposure measures overlap with AI capabilities as of 2023. It is not a forecast of job losses, since exposed work may be automated, made more productive, or both.</p>
+        <p class="cite">Muro, Methkupally and Kinder, “The geography of generative AI’s workforce impacts will likely differ from those of previous technologies,” Brookings, Feb. 19, 2025.</p>
       </div>
       <div class="method-col">
         <h3>Labor market distress <span>W.E. Upjohn Institute</span></h3>
-        <p>Upjohn measures distress with a single number: the <strong>prime-age employment rate</strong>, the share of civilians aged 25 to 54 who have a job. Focusing on this age group removes most of the effect of students and retirees, so the rate shows how well a local economy provides work for people who are generally expected to work. Unlike the unemployment rate, it also counts people who have given up looking for a job.</p>
-        <p>The rates come from the Census Bureau’s American Community Survey, 2015–2019 five-year estimates, a period close to the peak of the last business cycle (ACS collection was disrupted in 2020). Upjohn sorts every place into five levels using the same cutoffs everywhere, set from the distribution of population across local labor markets:</p>
+        <p>Distress is measured by the <strong>prime-age employment rate</strong>: the share of civilians aged 25–54 who have a job. Limiting it to this age group removes most of the effect of students and retirees, and unlike the unemployment rate it counts people who have stopped looking for work. Rates are from the American Community Survey, 2015–2019 five-year estimates. Upjohn's five levels, and how this dashboard groups them:</p>
         <table class="method-table">
-          <thead><tr><th scope="col">Upjohn level</th><th scope="col">Prime-age employment rate</th><th scope="col">This dashboard</th></tr></thead>
+          <thead><tr><th scope="col">Upjohn level</th><th scope="col">Employment rate</th><th scope="col">Dashboard</th></tr></thead>
           <tbody>
             <tr><td>Fully employed</td><td>82.8% or higher</td><td class="grp" rowspan="2">Healthy</td></tr>
             <tr><td>Close to fully employed</td><td>80% to 82.8%</td></tr>
@@ -109,27 +113,19 @@
             <tr><td>Severely distressed</td><td>below 72.3%</td></tr>
           </tbody>
         </table>
-        <p>This map uses each county’s own rate. Upjohn also reports rates for state-based local labor markets (metro areas split at state lines, with each rural county on its own), which appear in the map tooltip as the county’s labor market.</p>
-        <p class="caveat">Upjohn calls the cutoffs inherently arbitrary: a county just above a line is not meaningfully different from one just below it. Rates in small counties rest on small survey samples and can be noisy.</p>
-        <p class="cite">W.E. Upjohn Institute for Employment Research, Local Labor Market Distress Dataset, based on Timothy J. Bartik, “Using Place-Based Jobs Policies to Help Distressed Communities” (2020).</p>
+        <p>The map uses each county's own rate; the tooltip also names the county's local labor market (metro areas split at state lines, rural counties on their own). Upjohn calls the cutoffs arbitrary, and rates for small counties rest on small samples.</p>
+        <p class="cite">Upjohn Institute, Local Labor Market Distress Dataset; Bartik, “Using Place-Based Jobs Policies to Help Distressed Communities” (2020). County population is also from this dataset.</p>
       </div>
-    </div>
-  </section>
-</main>
-
-<footer class="foot">
-  <div class="foot-in">
-    <div>
-      <h3>Sources</h3>
-      <p>AI exposure share is the Brookings Institution's count of jobs exposed to generative AI divided by total jobs in the county. Prime-age (25–54) employment rate, the five-level distress ranking, local labor market names and county population are from the W.E. Upjohn Institute's Local Labor Market Distress Dataset. Employment by industry is from the BLS Quarterly Census of Employment and Wages (QCEW), 2024 annual average (Connecticut, 2023).</p>
-    </div>
-    <div>
-      <h3>Classes</h3>
-      <p>AI exposure is split into terciles: <span id="terciles"></span>. Labor markets are grouped by prime-age employment rate: healthy ≥ 80% (Upjohn's fully and close to fully employed), marginal 76.5–80% (marginally distressed) and distressed &lt; 76.5% (distressed and severely distressed). Valdez-Cordova, AK and Kalawao, HI have no exposure data and Loving, TX has no employment rate; they are shown in gray.</p>
-    </div>
-    <div>
-      <h3>Industry mix</h3>
-      <p>Jobs are counted where people work, not where they live. Government is grouped by level, so public school teachers and public hospital staff count as government; active-duty military is excluded. "Not disclosed" is employment BLS withholds to protect individual employers. All jobs pools every job in the selection, so large counties dominate; Avg. county weights each county's mix equally. On the Largest industry map, stripes mark counties where withheld jobs exceed the lead of the largest sector over the second.</p>
+      <div class="method-col">
+        <h3>Industry mix <span>Bureau of Labor Statistics</span></h3>
+        <p>Employment by industry is from the Quarterly Census of Employment and Wages, 2024 annual average (Connecticut, 2023). Jobs are counted where people work, not where they live. Government is grouped by level, so public school teachers and public hospital staff count as government; active-duty military is excluded. “Not disclosed” is employment BLS withholds to protect individual employers.</p>
+        <p><strong>All jobs</strong> pools every job in the selection, so large counties dominate; <strong>Avg. county</strong> weights each county's mix equally. On the Largest industry map, stripes mark counties where withheld jobs exceed the lead of the largest sector over the second.</p>
+      </div>
+      <div class="method-col">
+        <h3>Map groups <span>This dashboard</span></h3>
+        <p>AI exposure is split into county terciles: <span id="terciles"></span>. The overlay map crosses these with the three distress groups above. The <strong>exposure share</strong> in the summary is job-weighted; the <strong>correlation</strong> is the Pearson r between county exposure share and employment rate, with each county counted equally.</p>
+        <p>Valdez-Cordova, AK and Kalawao, HI have no exposure data and Loving, TX has no employment rate; they are shown in gray.</p>
+      </div>
     </div>
   </div>
 </footer>

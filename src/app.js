@@ -60,6 +60,7 @@ const EXP_LBL = ["Low","Mid","High"], DIS_LBL = ["Healthy","Marginal","Distresse
 const CAT5 = ["Fully employed","Close to fully employed","Marginally distressed","Distressed","Severely distressed"];
 const CAT5C = ["#DDE3EC","#AFBBD0","#8297BB","#4F6A98","#1E3A65"];
 const NA = "#C9C9C4";
+const DIM = "#ECECE8"; // counties outside the isolated group / state: flat, lighter than the no-data gray
 const expScale = d3.scaleSequential(t => d3.interpolateRgb("#F6EEDB","#B26A00")(t)).domain([0.27,0.36]).clamp(true);
 
 const ex = v => v==null ? null : v < Q1 ? 0 : v < Q2 ? 1 : 2;
@@ -77,6 +78,7 @@ const paths = g.append("g").selectAll("path").data(counties).join("path").attr("
 const hatch = g.append("path").attr("fill","url(#hatch)").style("pointer-events","none");
 g.append("path").attr("class","states").attr("d", path(topojson.mesh(TOPO, TOPO.objects.states, (a,b)=>a!==b)));
 g.append("path").attr("class","states").attr("d", path(topojson.mesh(TOPO, TOPO.objects.nation)));
+const selLine = g.append("path").attr("class","sel-outline");
 const pinLine = g.append("path").attr("class","outline");
 const hoverLine = g.append("path").attr("class","outline");
 
@@ -89,6 +91,8 @@ function fill(f){
   if (view==="gv") { const t = TOPI[f.id]; return t ? LCAT[LCAT_IDX.get(t.cat)].c : NA; }
   return CAT5.includes(f.d[6]) ? CAT5C[CAT5.indexOf(f.d[6])] : NA;
 }
+// In the isolated group and the filtered state (if any)
+function active(f){ return inSel(f) && (!stateF || (f.d && f.d[1]===stateF)); }
 function inSel(f){
   if (!sel || !f.d) return true;
   if (view==="bi") return f.ex===sel.ex && f.ds===sel.ds;
@@ -99,9 +103,12 @@ function inSel(f){
 let painted = false;
 function render(){
   const t = painted && !reduce ? paths.transition().duration(200) : paths;
-  t.attr("fill", fill).attr("opacity", f => inSel(f) ? 1 : 0.12);
+  t.attr("fill", f => active(f) ? fill(f) : DIM);
   painted = true;
-  hatch.attr("d", view==="gv" ? path({type:"FeatureCollection", features:counties.filter(f => TOPI[f.id] && !TOPI[f.id].sure && inSel(f))}) : null);
+  hatch.attr("d", view==="gv" ? path({type:"FeatureCollection", features:counties.filter(f => TOPI[f.id] && !TOPI[f.id].sure && active(f))}) : null);
+  // Outline the edge of the highlighted area: borders between highlighted and dimmed counties, plus coastlines
+  const on = id => active(byId.get(id));
+  selLine.attr("d", sel || stateF ? path(topojson.mesh(TOPO, TOPO.objects.counties, (a,b) => a===b ? on(a.id) : on(a.id)!==on(b.id))) : null);
   legend(); stats(); indPanel();
 }
 
@@ -139,11 +146,13 @@ function indPanel(){
     ids = IND[pinned] ? [pinned] : [];
     jobs = IND[pinned] ? IND[pinned][14] : 0;
     sub.textContent = ids.length ? `${num(jobs)} jobs located in the county, 2024.` : "";
+    document.getElementById("indMeta").textContent = "Pinned: " + d[0];
   } else {
     pin.innerHTML = "";
     ids = counties.filter(f => f.d && IND[f.id] && inSel(f) && (!stateF || f.d[1]===stateF)).map(f=>f.id);
     jobs = d3.sum(ids, id => IND[id][14]);
     sub.textContent = `${document.getElementById("sumSub").textContent}: ${num(ids.length)} counties, ${num(jobs)} jobs. Click a county on the map to see it alone.`;
+    document.getElementById("indMeta").textContent = document.getElementById("sumSub").textContent;
   }
   const avg = weight === "avg" && !pinned;
   const us = avg ? US_AVG : US_POOL;
@@ -269,6 +278,7 @@ function topList(){
   ol.innerHTML = fs.length ? fs.map((f,i)=>`<li><button type="button" data-id="${f.id}"><span class="rk">${String(i+1).padStart(2,"0")}</span>
     <span class="tx"><span class="nm">${f.d[0]}</span><span class="mt">${num(f.d[3])} jobs · ${pct(f.d[2])} · emp. ${pct(f.d[5])}</span></span></button></li>`).join("")
     : `<li class="none">None in this state.</li>`;
+  document.getElementById("topMeta").textContent = fs.length ? `Top ${fs.length}${stateF ? " in " + stateF : ""}` : "None in this state";
   ol.querySelectorAll("button[data-id]").forEach(b => b.onclick = () => focusCounty(b.dataset.id));
 }
 
@@ -323,6 +333,8 @@ function zoomOut(){ svg.transition().duration(reduce?0:650).call(zoom.transform,
 function focusCounty(id){
   const f = byId.get(id); if (!f) return;
   hideTip(); setPinned(id);
+  const mb = document.getElementById("mapbox").getBoundingClientRect();
+  if (mb.top < 0 || mb.bottom > window.innerHeight) document.getElementById("mapbox").scrollIntoView({behavior: reduce ? "auto" : "smooth", block: "start"});
   zoomTo(f).on("end", () => {
     const [cx,cy] = d3.zoomTransform(svg.node()).apply(path.centroid(f));
     const s = wrap.clientWidth / 975;
@@ -339,7 +351,7 @@ stSel.onchange = () => {
   stateF = stSel.value;
   const sf = states.find(s => s.properties.name === stateF);
   if (sf) zoomTo(sf); else zoomOut();
-  stats(); topList(); indPanel();
+  render(); topList();
 };
 
 // Search

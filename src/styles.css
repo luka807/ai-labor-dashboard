@@ -1,4 +1,4 @@
-/* Layout: navy header band, KPI strip, then map (wide) + panel rail (wraps below at narrow widths), white footer.
+/* Layout: navy header band, KPI strip, then map (wide) with collapsible industry mix and top-10 sections beneath it, legend rail (wraps below at narrow widths), white footer.
    Tokens come from src/lnp/colors_and_type.css (Leadership Now design system). Square corners except 2px on inputs. */
 :root{
   --nodata:#C9C9C4; --tick:#B26A00; --govbar:#3260A9;
@@ -27,7 +27,7 @@ h1,h2,h3{font-family:var(--font-display)}
 .page{max-width:1320px;margin:0 auto;padding:28px 24px 48px;display:flex;flex-direction:column;gap:24px}
 .card{background:#fff;border:1px solid var(--color-border)}
 .main{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
-.mapbox{flex:999 1 560px;min-width:0}
+.mapcol{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:16px}
 aside{flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:16px}
 
 /* Selection summary (KPI strip) */
@@ -66,6 +66,7 @@ input[type=search]{width:220px;max-width:100%}
 svg#map{display:block;width:100%;height:auto;aspect-ratio:975/610;touch-action:none}
 .county{stroke:#fff;stroke-width:.3;vector-effect:non-scaling-stroke;cursor:pointer}
 .states{fill:none;stroke:#fff;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
+.sel-outline{fill:none;stroke:var(--lnp-navy-deep);stroke-width:1.6;stroke-linejoin:round;vector-effect:non-scaling-stroke;pointer-events:none}
 .outline{fill:none;stroke:var(--lnp-ink);stroke-width:1.5;vector-effect:non-scaling-stroke;pointer-events:none}
 .note{margin:0;padding:10px 16px;border-top:1px solid var(--color-border);font-size:12px;color:var(--color-fg-muted)}
 
@@ -153,25 +154,35 @@ ol.top .nm{font-size:13px;font-weight:600;line-height:1.35;color:var(--lnp-navy-
 ol.top .mt{font-size:12px;line-height:1.4;color:var(--color-fg-muted)}
 ol.top .none{border:0;padding:10px 0;font-size:13px;color:var(--color-fg-muted)}
 
-/* Footer */
-/* Methodology */
-.method-head{padding:20px 24px 0}
-.method-head .kicker{color:var(--lnp-navy-deep)}
-.method-head .gold{margin-bottom:0}
-.method-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:8px 48px;padding:12px 24px 28px}
-.method-col{min-width:0;max-width:75ch}
-.method-col h3{margin:12px 0 10px;font-weight:700;font-size:19px;line-height:1.3;color:var(--lnp-navy-deep)}
-.method-col h3 span{display:block;margin-top:2px;font-family:var(--font-body);font-weight:400;font-size:13px;color:var(--color-fg-muted)}
-.method-col p{margin:0 0 12px;font-size:14px;line-height:1.6;color:var(--lnp-ink);text-wrap:pretty}
-.method-col strong{font-weight:700;color:var(--lnp-navy-deep)}
-.method-col .caveat{padding:10px 12px;border-left:3px solid var(--lnp-gold);background:var(--lnp-gray-50);font-size:13px}
-.method-col .cite{margin:0;font-size:12px;color:var(--color-fg-muted)}
-.method-table{width:100%;border-collapse:collapse;margin:4px 0 14px;font-size:13px;line-height:1.4}
-.method-table th{padding:6px 8px;border-bottom:2px solid var(--lnp-navy-deep);text-align:left;font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-fg-muted)}
-.method-table td{padding:6px 8px;border-bottom:1px solid var(--lnp-gray-100);color:var(--lnp-ink);vertical-align:middle}
-.method-table td.grp{border-left:1px solid var(--lnp-gray-100);font-weight:600}
+/* Dropdown sections under the map */
+.drop summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:16px 48px 16px 20px;position:relative;list-style:none;cursor:pointer}
+.drop summary::-webkit-details-marker{display:none}
+.drop summary::after{content:"";position:absolute;right:22px;top:50%;width:8px;height:8px;margin-top:-6px;border-right:2px solid var(--lnp-navy-deep);border-bottom:2px solid var(--lnp-navy-deep);transform:rotate(45deg);transition:transform 150ms}
+.drop[open] summary::after{transform:rotate(-135deg);margin-top:-2px}
+.drop summary:hover{background:var(--lnp-gray-50)}
+.drop-t{font-family:var(--font-display);font-weight:700;font-size:13px;line-height:1.35;letter-spacing:.1em;text-transform:uppercase;color:var(--lnp-navy-deep)}
+.drop-meta{font-size:13px;color:var(--color-fg-muted)}
+.drop-body{padding:16px 20px 20px;border-top:1px solid var(--color-border)}
+.drop .sub{margin:0 0 16px;font-size:13px;line-height:1.45;color:var(--color-fg-muted);text-wrap:pretty}
+.drop-tools{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:8px 16px}
+.drop-tools .sub{flex:1 1 280px}
+.drop .ind .rows{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px 32px}
+.drop ol.top{display:block;columns:2 300px;column-gap:32px}
+.drop ol.top li{break-inside:avoid}
 
+/* Footer: methodology */
 .foot{border-top:1px solid var(--color-border);background:#fff}
-.foot-in{max-width:1320px;margin:0 auto;padding:32px 24px 40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px 40px;font-size:12px;line-height:1.6;color:var(--color-fg-muted)}
-.foot h3{margin:0 0 8px;font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--lnp-navy-deep)}
-.foot p{margin:0;text-wrap:pretty}
+.foot-in{max-width:1320px;margin:0 auto;padding:32px 24px 40px}
+.method-head h2{margin:0;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--lnp-navy-deep)}
+.method-head .gold{margin:10px 0 0}
+.method-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:28px 48px;margin-top:20px}
+.method-col{min-width:0;max-width:80ch}
+.method-col h3{margin:0 0 8px;font-weight:700;font-size:15px;line-height:1.3;color:var(--lnp-navy-deep)}
+.method-col h3 span{margin-left:6px;font-family:var(--font-body);font-weight:400;font-size:12px;color:var(--color-fg-muted)}
+.method-col p{margin:0 0 10px;font-size:13px;line-height:1.6;color:var(--color-fg-muted);text-wrap:pretty}
+.method-col strong{font-weight:700;color:var(--lnp-ink)}
+.method-col .cite{margin:0;font-size:12px;font-style:italic}
+.method-table{width:100%;border-collapse:collapse;margin:2px 0 12px;font-size:12px;line-height:1.4}
+.method-table th{padding:5px 8px;border-bottom:2px solid var(--lnp-navy-deep);text-align:left;font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-fg-muted)}
+.method-table td{padding:5px 8px;border-bottom:1px solid var(--lnp-gray-100);color:var(--lnp-ink);vertical-align:middle}
+.method-table td.grp{border-left:1px solid var(--lnp-gray-100);font-weight:600}
