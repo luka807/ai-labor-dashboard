@@ -178,17 +178,21 @@ function legend(){
   const el = document.getElementById("legendPanel");
   const head = (t, s) => `<h2>${t}</h2><div class="gold"></div><p class="sub">${s}</p>`;
   const op = on => on ? 1 : 0.2;
+  // Counts follow the state filter
+  const inState = f => f.d && (!stateF || f.d[1]===stateF);
+  const where = stateF ? ` in ${stateF}` : "";
   if (view==="bi"){
-    const cnt = d3.rollup(counties.filter(f=>f.d && f.ex!=null), v=>v.length, f=>f.ds+"-"+f.ex);
+    const cnt = d3.rollup(counties.filter(f=>inState(f) && f.ex!=null), v=>v.length, f=>f.ds+"-"+f.ex);
+    const rowN = r => num((cnt.get(r+"-0")||0) + (cnt.get(r+"-1")||0) + (cnt.get(r+"-2")||0));
     let cells = "";
     for (let r=2;r>=0;r--) for (let c=0;c<3;c++){
       const k=r+"-"+c, n = num(cnt.get(k)||0), on = !sel || (sel.ex===c && sel.ds===r);
       const lbl = `${DIS_LBL[r]} labor market, ${EXP_LBL[c]} AI exposure: ${n} counties`;
       cells += `<button type="button" class="cell" style="background:${BI[r][c]};color:${r===2?"#fff":"#1F2024"};opacity:${op(on)}" data-r="${r}" data-c="${c}" aria-pressed="${!!sel && on}" aria-label="${lbl}" title="${lbl}">${n}</button>`;
     }
-    el.innerHTML = head("Legend", "Numbers are county counts. Click a square to isolate it.") +
+    el.innerHTML = head("Legend", `Numbers are county counts${where}. Click a square to isolate it.`) +
       `<div class="biv"><div class="ylab"><span class="axis">Labor distress →</span></div>
-        <div class="rlab"><span>Distressed</span><span>Marginal</span><span>Healthy</span></div>
+        <div class="rlab"><span>Distressed<small>${rowN(2)}</small></span><span>Marginal<small>${rowN(1)}</small></span><span>Healthy<small>${rowN(0)}</small></span></div>
         <div><div class="grid3">${cells}</div>
           <div class="ticks"><span>Low</span><span>Mid</span><span>High</span></div>
           <div class="axis xtitle">AI exposure share →</div></div></div>`;
@@ -202,17 +206,17 @@ function legend(){
       `<div class="ramp" style="background:linear-gradient(90deg,${stops})"></div>
       <div class="ramp-lab"><span>≤27%</span><span>31.5%</span><span>≥36%</span></div>`;
   } else if (view==="gv"){
-    const withD = counties.filter(f=>f.d && TOPI[f.id]);
+    const withD = counties.filter(f=>inState(f) && TOPI[f.id]);
     const cnt = d3.rollup(withD, v=>v.length, f=>TOPI[f.id].cat);
     const unsure = withD.filter(f=>!TOPI[f.id].sure).length;
-    el.innerHTML = head("Largest industry", "Sector with the most jobs located in the county (BLS, 2024). Government combines federal, state and local. Click to isolate.") +
+    el.innerHTML = head("Largest industry", `Sector with the most jobs located in the county (BLS, 2024). Government combines federal, state and local. Counts are counties${where}. Click to isolate.`) +
       `<div class="cats">${LCAT.map(d=>{ const n = num(cnt.get(d.key)||0);
         return `<button type="button" class="cat" style="opacity:${op(!sel || sel.ind===d.key)}" data-k="${d.key}" aria-pressed="${!!sel && sel.ind===d.key}" aria-label="Largest industry ${d.key}: ${n} counties"><i style="background:${d.c}"></i><span class="lbl">${d.key}${d.note?`<small>${d.note}</small>`:""}</span><span class="n">${n}</span></button>`; }).join("")}
         <div class="hatch-row"><i></i><span class="lbl">Striped: BLS withheld enough jobs that a different sector could be largest</span><span class="n">${num(unsure)}</span></div></div>`;
     el.querySelectorAll(".cat").forEach(b => b.onclick = () => { sel = (sel && sel.ind===b.dataset.k) ? null : {ind:b.dataset.k}; render(); });
   } else {
-    const cnt = d3.rollup(counties.filter(f=>f.d), v=>v.length, f=>f.d[6]);
-    el.innerHTML = head("Labor distress", "Prime-age employment rate ranking. Click to isolate.") +
+    const cnt = d3.rollup(counties.filter(inState), v=>v.length, f=>f.d[6]);
+    el.innerHTML = head("Labor distress", `Prime-age employment rate ranking. Counts are counties${where}. Click to isolate.`) +
       `<div class="cats">${CAT5.map((c,i)=>{ const n = num(cnt.get(c)||0);
         return `<button type="button" class="cat" style="opacity:${op(!sel || sel.cat===c)}" data-c="${c}" aria-pressed="${!!sel && sel.cat===c}" aria-label="${c}: ${n} counties"><i style="background:${CAT5C[i]}"></i><span class="lbl">${c}</span><span class="n">${n}</span></button>`; }).join("")}</div>
       <p class="legend-note">Thresholds: ≥82.8%, 80–82.8%, 76.5–80%, 72.3–76.5%, &lt;72.3%.</p>`;
