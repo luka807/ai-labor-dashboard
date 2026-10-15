@@ -83,7 +83,7 @@ const pinLine = g.append("path").attr("class","outline");
 const hoverLine = g.append("path").attr("class","outline");
 
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-let view = "bi", sel = null; // sel = {ex,ds}, {cat} or {ind}
+let view = "bi", sel = new Set(); // legend groups isolated in the current view: "ds-ex", distress category or industry
 function fill(f){
   if (!f.d) return NA;
   if (view==="bi") return f.ex==null ? NA : BI[f.ds][f.ex];
@@ -94,12 +94,17 @@ function fill(f){
 // In the isolated group and the filtered state (if any)
 function active(f){ return inSel(f) && (!stateF || (f.d && f.d[1]===stateF)); }
 function inSel(f){
-  if (!sel || !f.d) return true;
-  if (view==="bi") return f.ex===sel.ex && f.ds===sel.ds;
-  if (view==="ds") return f.d[6]===sel.cat;
-  if (view==="gv") return TOPI[f.id] ? TOPI[f.id].cat===sel.ind : false;
-  return true;
+  if (!sel.size || !f.d) return true;
+  return sel.has(selKey(f));
 }
+// The legend group a county belongs to in the current view
+function selKey(f){
+  if (view==="bi") return f.ex==null ? null : f.ds+"-"+f.ex;
+  if (view==="ds") return f.d[6];
+  if (view==="gv") return TOPI[f.id] ? TOPI[f.id].cat : null;
+  return null;
+}
+function toggleSel(k){ sel.has(k) ? sel.delete(k) : sel.add(k); render(); }
 let painted = false;
 function render(){
   const t = painted && !reduce ? paths.transition().duration(200) : paths;
@@ -108,7 +113,7 @@ function render(){
   hatch.attr("d", view==="gv" ? path({type:"FeatureCollection", features:counties.filter(f => TOPI[f.id] && !TOPI[f.id].sure && active(f))}) : null);
   // Outline the edge of the highlighted area: borders between highlighted and dimmed counties, plus coastlines
   const on = id => active(byId.get(id));
-  selLine.attr("d", sel || stateF ? path(topojson.mesh(TOPO, TOPO.objects.counties, (a,b) => a===b ? on(a.id) : on(a.id)!==on(b.id))) : null);
+  selLine.attr("d", sel.size || stateF ? path(topojson.mesh(TOPO, TOPO.objects.counties, (a,b) => a===b ? on(a.id) : on(a.id)!==on(b.id))) : null);
   legend(); stats(); indPanel();
 }
 
@@ -184,20 +189,17 @@ function legend(){
     const rowN = r => num((cnt.get(r+"-0")||0) + (cnt.get(r+"-1")||0) + (cnt.get(r+"-2")||0));
     let cells = "";
     for (let r=2;r>=0;r--) for (let c=0;c<3;c++){
-      const k=r+"-"+c, n = num(cnt.get(k)||0), on = !sel || (sel.ex===c && sel.ds===r);
+      const k=r+"-"+c, n = num(cnt.get(k)||0), on = !sel.size || sel.has(k);
       const lbl = `${DIS_LBL[r]} labor market, ${EXP_LBL[c]} AI exposure: ${n} counties`;
-      cells += `<button type="button" class="cell" style="background:${BI[r][c]};color:${r===2?"#fff":"#1F2024"};opacity:${op(on)}" data-r="${r}" data-c="${c}" aria-pressed="${!!sel && on}" aria-label="${lbl}" title="${lbl}">${n}</button>`;
+      cells += `<button type="button" class="cell" style="background:${BI[r][c]};color:${r===2?"#fff":"#1F2024"};opacity:${op(on)}" data-k="${k}" aria-pressed="${sel.has(k)}" aria-label="${lbl}" title="${lbl}">${n}</button>`;
     }
-    el.innerHTML = head("Legend", `Numbers are county counts${where}. Click a square to isolate it.`) +
+    el.innerHTML = head("Legend", `Numbers are county counts${where}. Click squares to isolate one or more groups; click again to remove.`) +
       `<div class="biv"><div class="ylab"><span class="axis">Labor distress →</span></div>
         <div class="rlab"><span>Distressed<small>${rowN(2)}</small></span><span>Marginal<small>${rowN(1)}</small></span><span>Healthy<small>${rowN(0)}</small></span></div>
         <div><div class="grid3">${cells}</div>
           <div class="ticks"><span>Low</span><span>Mid</span><span>High</span></div>
           <div class="axis xtitle">AI exposure share →</div></div></div>`;
-    el.querySelectorAll(".cell").forEach(b => b.onclick = () => {
-      const r=+b.dataset.r, c=+b.dataset.c;
-      sel = (sel && sel.ex===c && sel.ds===r) ? null : {ex:c, ds:r}; render();
-    });
+    el.querySelectorAll(".cell").forEach(b => b.onclick = () => toggleSel(b.dataset.k));
   } else if (view==="ex"){
     const stops = d3.range(0,1.01,.1).map(t=>expScale(0.27+t*0.09)).join(",");
     el.innerHTML = head("AI exposure share", "Share of county jobs exposed to generative AI.") +
@@ -207,19 +209,31 @@ function legend(){
     const withD = counties.filter(f=>inState(f) && TOPI[f.id]);
     const cnt = d3.rollup(withD, v=>v.length, f=>TOPI[f.id].cat);
     const unsure = withD.filter(f=>!TOPI[f.id].sure).length;
-    el.innerHTML = head("Largest industry", `Sector with the most jobs located in the county (BLS, 2024). Government combines federal, state and local. Counts are counties${where}. Click to isolate.`) +
+    el.innerHTML = head("Largest industry", `Sector with the most jobs located in the county (BLS, 2024). Government combines federal, state and local. Counts are counties${where}. Click to isolate one or more.`) +
       `<div class="cats">${LCAT.map(d=>{ const n = num(cnt.get(d.key)||0);
-        return `<button type="button" class="cat" style="opacity:${op(!sel || sel.ind===d.key)}" data-k="${d.key}" aria-pressed="${!!sel && sel.ind===d.key}" aria-label="Largest industry ${d.key}: ${n} counties"><i style="background:${d.c}"></i><span class="lbl">${d.key}${d.note?`<small>${d.note}</small>`:""}</span><span class="n">${n}</span></button>`; }).join("")}
+        return `<button type="button" class="cat" style="opacity:${op(!sel.size || sel.has(d.key))}" data-k="${d.key}" aria-pressed="${sel.has(d.key)}" aria-label="Largest industry ${d.key}: ${n} counties"><i style="background:${d.c}"></i><span class="lbl">${d.key}${d.note?`<small>${d.note}</small>`:""}</span><span class="n">${n}</span></button>`; }).join("")}
         <div class="hatch-row"><i></i><span class="lbl">Striped: BLS withheld enough jobs that a different sector could be largest</span><span class="n">${num(unsure)}</span></div></div>`;
-    el.querySelectorAll(".cat").forEach(b => b.onclick = () => { sel = (sel && sel.ind===b.dataset.k) ? null : {ind:b.dataset.k}; render(); });
+    el.querySelectorAll(".cat").forEach(b => b.onclick = () => toggleSel(b.dataset.k));
   } else {
     const cnt = d3.rollup(counties.filter(inState), v=>v.length, f=>f.d[6]);
-    el.innerHTML = head("Labor distress", `Prime-age employment rate ranking. Counts are counties${where}. Click to isolate.`) +
+    el.innerHTML = head("Labor distress", `Prime-age employment rate ranking. Counts are counties${where}. Click to isolate one or more.`) +
       `<div class="cats">${CAT5.map((c,i)=>{ const n = num(cnt.get(c)||0);
-        return `<button type="button" class="cat" style="opacity:${op(!sel || sel.cat===c)}" data-c="${c}" aria-pressed="${!!sel && sel.cat===c}" aria-label="${c}: ${n} counties"><i style="background:${CAT5C[i]}"></i><span class="lbl">${c}</span><span class="n">${n}</span></button>`; }).join("")}</div>
+        return `<button type="button" class="cat" style="opacity:${op(!sel.size || sel.has(c))}" data-c="${c}" aria-pressed="${sel.has(c)}" aria-label="${c}: ${n} counties"><i style="background:${CAT5C[i]}"></i><span class="lbl">${c}</span><span class="n">${n}</span></button>`; }).join("")}</div>
       <p class="legend-note">Thresholds: ≥82.8%, 80–82.8%, 76.5–80%, 72.3–76.5%, &lt;72.3%.</p>`;
-    el.querySelectorAll(".cat").forEach(b => b.onclick = () => { sel = (sel && sel.cat===b.dataset.c) ? null : {cat:b.dataset.c}; render(); });
+    el.querySelectorAll(".cat").forEach(b => b.onclick = () => toggleSel(b.dataset.c));
   }
+}
+
+// Name of the isolated groups, in legend order
+function selLabel(){
+  if (!sel.size) return "All counties";
+  if (view==="bi"){
+    const ks = [2,1,0].flatMap(r => [0,1,2].map(c => r+"-"+c)).filter(k => sel.has(k));
+    if (ks.length===1){ const [r,c] = ks[0].split("-"); return `${DIS_LBL[r]} labor market · ${EXP_LBL[c]} AI exposure`; }
+    return ks.map(k => { const [r,c] = k.split("-"); return `${DIS_LBL[r]} · ${EXP_LBL[c]} exposure`; }).join(", ");
+  }
+  if (view==="ds") return CAT5.filter(c => sel.has(c)).join(", ");
+  return "Largest industry: " + LCAT.map(d => d.key).filter(k => sel.has(k)).join(", ");
 }
 
 // Stats for current selection (+ state filter)
@@ -228,11 +242,7 @@ function stats(){
   const fs = counties.filter(f => f.d && inSel(f) && (!stateF || f.d[1]===stateF));
   const tj = d3.sum(fs, f=>f.d[4]||0), pop = d3.sum(fs, f=>f.d[7]);
   const withEx = fs.filter(f=>f.d[3]!=null), ej = d3.sum(withEx, f=>f.d[3]), eb = d3.sum(withEx, f=>f.d[4]||0);
-  let label = "All counties";
-  if (sel && view==="bi") label = `${DIS_LBL[sel.ds]} labor market · ${EXP_LBL[sel.ex]} AI exposure`;
-  if (sel && view==="ds") label = sel.cat;
-  if (sel && view==="gv") label = "Largest industry: " + sel.ind;
-  document.getElementById("sumSub").textContent = label + (stateF ? " · " + stateF : "");
+  document.getElementById("sumSub").textContent = selLabel() + (stateF ? " · " + stateF : "");
   const kpis = [
     ["Counties", num(fs.length), num(fs.length)],
     ["Population", compact(pop), num(pop)],
@@ -357,14 +367,14 @@ document.getElementById("countylist").innerHTML = [...byName.keys()].sort().map(
 document.getElementById("search").onchange = e => { const id = byName.get(e.target.value); if (id) focusCounty(id); };
 
 document.getElementById("reset").onclick = () => {
-  sel = null; stateF = ""; stSel.value = ""; document.getElementById("search").value = "";
+  sel.clear(); stateF = ""; stSel.value = ""; document.getElementById("search").value = "";
   hideTip(); setPinned(null); zoomOut(); render(); topList();
 };
 
 // View toggle
 [["v-bi","bi"],["v-ex","ex"],["v-ds","ds"],["v-gv","gv"]].forEach(([id,v]) => document.getElementById(id).onclick = () => {
   if (view === v) return;
-  view = v; sel = null;
+  view = v; sel.clear();
   document.querySelectorAll("#mapbox .seg button").forEach(b => b.setAttribute("aria-pressed", b.id===id));
   render();
 });
