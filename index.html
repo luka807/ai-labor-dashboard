@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Generative AI exposure vs. local labor market distress</title>
+<link rel="icon" href="assets/favicon-32x32.png" sizes="32x32">
+<link rel="icon" href="assets/favicon-192x192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="assets/favicon-180x180.png">
 <link rel="stylesheet" href="src/lnp/colors_and_type.css">
 <link rel="stylesheet" href="src/styles.css">
 </head>
@@ -13,7 +16,7 @@
     <div class="brandbar"><img src="assets/lnp-logo-yellow-white.png" alt="Leadership Now Project"></div>
     <div class="hero-grid">
       <div class="hero-title">
-        <p class="eyebrow">Internal · AI Tax Policy research</p>
+        <p class="eyebrow">AI Taskforce - Compact Research</p>
         <h1>Generative AI exposure vs. local labor market distress</h1>
         <div class="rule"></div>
       </div>
@@ -54,23 +57,8 @@
         <svg id="map" viewBox="0 0 975 610" role="img" aria-label="Map of U.S. counties shaded by the selected measure"></svg>
         <div class="tip" id="tip" role="status" hidden></div>
       </div>
-      <p class="note">Scroll or pinch to zoom, drag to pan. Click a legend square to isolate that group. Click a county to see its industry mix below.</p>
+      <p class="note">Scroll or pinch to zoom, drag to pan. Click a legend square to isolate that group. Click a county to see its industry mix.</p>
     </section>
-
-    <details class="card drop" id="indPanel">
-      <summary><span class="drop-t">Industry mix of local jobs</span><span class="drop-meta" id="indMeta"></span></summary>
-      <div class="drop-body">
-        <div class="drop-tools">
-          <p class="sub" id="indSub"></p>
-          <div class="seg seg-sm" role="group" aria-label="Weighting" id="wseg">
-            <button type="button" id="w-pool" aria-pressed="true">All jobs</button>
-            <button type="button" id="w-avg" aria-pressed="false">Avg. county</button>
-          </div>
-        </div>
-        <div id="pin"></div>
-        <div class="ind" id="ind"></div>
-      </div>
-    </details>
 
     <details class="card drop" id="topPanel">
       <summary><span class="drop-t">Most exposed jobs in distressed counties</span><span class="drop-meta" id="topMeta"></span></summary>
@@ -83,6 +71,19 @@
 
     <aside>
       <section class="card panel" id="legendPanel"></section>
+      <section class="card panel" id="indPanel" aria-labelledby="ind-h">
+        <div class="panel-head">
+          <h2 id="ind-h">Industry mix of local jobs</h2>
+          <div class="seg seg-sm" role="group" aria-label="Weighting" id="wseg">
+            <button type="button" id="w-pool" aria-pressed="true">All jobs</button>
+            <button type="button" id="w-avg" aria-pressed="false">Avg. county</button>
+          </div>
+        </div>
+        <div class="gold"></div>
+        <p class="sub" id="indSub"></p>
+        <div id="pin"></div>
+        <div class="ind" id="ind"></div>
+      </section>
     </aside>
   </div>
 </main>
@@ -98,7 +99,7 @@
         <h3>AI exposure <span>Brookings Institution</span></h3>
         <p>Brookings starts from occupation-level ratings by OpenAI researchers (Eloundou et al., 2023) of how much of each occupation's tasks a large language model could perform or substantially speed up. It matches the ratings to 738 occupation codes in the BLS Occupational Employment and Wage Statistics and averages them where several job titles share a code.</p>
         <p><strong>AI-exposed jobs</strong> in a county is employment in each occupation multiplied by that occupation's rating, summed. It is a weighted count, not a headcount. <strong>AI exposure share</strong> is AI-exposed jobs divided by total jobs; across counties it runs from about 20% to 47%. Exposure measures overlap with AI capabilities as of 2023. It is not a forecast of job losses, since exposed work may be automated, made more productive, or both.</p>
-        <p class="cite">Muro, Methkupally and Kinder, “The geography of generative AI’s workforce impacts will likely differ from those of previous technologies,” Brookings, Feb. 19, 2025.</p>
+        <p class="cite">Muro, Methkupally and Kinder, “<a href="https://www.brookings.edu/articles/the-geography-of-generative-ais-workforce-impacts-will-likely-differ-from-those-of-previous-technologies/" target="_blank" rel="noopener">The geography of generative AI’s workforce impacts will likely differ from those of previous technologies</a>,” Brookings, Feb. 19, 2025.</p>
       </div>
       <div class="method-col">
         <h3>Labor market distress <span>W.E. Upjohn Institute</span></h3>
@@ -114,16 +115,17 @@
           </tbody>
         </table>
         <p>The map uses each county's own rate; the tooltip also names the county's local labor market (metro areas split at state lines, rural counties on their own). Upjohn calls the cutoffs arbitrary, and rates for small counties rest on small samples.</p>
-        <p class="cite">Upjohn Institute, Local Labor Market Distress Dataset; Bartik, “Using Place-Based Jobs Policies to Help Distressed Communities” (2020). County population is also from this dataset.</p>
+        <p class="cite">Upjohn Institute, <a href="https://www.upjohn.org/major-initiatives/promise-investing-community/data-and-resources/economic-distress/distressed-communities-file-download" target="_blank" rel="noopener">Economic Distress Database</a>; Bartik, “Using Place-Based Jobs Policies to Help Distressed Communities” (2020). County population is also from this dataset.</p>
       </div>
       <div class="method-col">
         <h3>Industry mix <span>Bureau of Labor Statistics</span></h3>
         <p>Employment by industry is from the Quarterly Census of Employment and Wages, 2024 annual average (Connecticut, 2023). Jobs are counted where people work, not where they live. Government is grouped by level, so public school teachers and public hospital staff count as government; active-duty military is excluded. “Not disclosed” is employment BLS withholds to protect individual employers.</p>
         <p><strong>All jobs</strong> pools every job in the selection, so large counties dominate; <strong>Avg. county</strong> weights each county's mix equally. On the Largest industry map, stripes mark counties where withheld jobs exceed the lead of the largest sector over the second.</p>
+        <p class="cite">Bureau of Labor Statistics, <a href="https://www.bls.gov/cew/" target="_blank" rel="noopener">Quarterly Census of Employment and Wages</a>, 2024 annual averages (Connecticut, 2023).</p>
       </div>
       <div class="method-col">
         <h3>Map groups <span>This dashboard</span></h3>
-        <p>AI exposure is split into county terciles: <span id="terciles"></span>. The overlay map crosses these with the three distress groups above. The <strong>exposure share</strong> in the summary is job-weighted; the <strong>correlation</strong> is the Pearson r between county exposure share and employment rate, with each county counted equally.</p>
+        <p>AI exposure is split into county terciles: <span id="terciles"></span>. The overlay map crosses these with the three distress groups above. The <strong>exposure share</strong> in the summary is job-weighted.</p>
         <p>Valdez-Cordova, AK and Kalawao, HI have no exposure data and Loving, TX has no employment rate; they are shown in gray.</p>
       </div>
     </div>
