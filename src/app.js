@@ -373,7 +373,8 @@ paths.on("pointerenter", (e,f) => { hoverLine.attr("d", path(f)); if (f.d) { sho
 svg.on("pointerleave", hideTip);
 
 // Zoom
-const zoom = d3.zoom().scaleExtent([1,40]).translateExtent([[0,0],[975,610]]).on("zoom", e => {
+// Zoom out to 60% and drag the map anywhere, e.g. out from under the floating panels; the padded extent keeps it from being lost off-screen
+const zoom = d3.zoom().scaleExtent([0.6,40]).translateExtent([[-585,-366],[1560,976]]).on("zoom", e => {
   g.attr("transform", e.transform);
   pat.attr("patternTransform", `scale(${1/e.transform.k}) rotate(45)`);
 });
