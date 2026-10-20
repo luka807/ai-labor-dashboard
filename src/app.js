@@ -140,8 +140,17 @@ function mixOf(ids){
   ids.forEach(id => { const r = IND[id]; for (let k=0;k<14;k++) out[k] += r[k]/r[14]; });
   return out.map(v => v/ids.length);
 }
+// The panel floats over the map; it can be collapsed to its header and reopens when a county is clicked
+const indEl = document.getElementById("indPanel"), indTog = document.getElementById("indTog");
+function setIndOpen(open){
+  indEl.classList.toggle("collapsed", !open);
+  indTog.setAttribute("aria-expanded", open);
+  indTog.textContent = open ? "Hide" : "Show";
+}
+indTog.onclick = () => setIndOpen(indEl.classList.contains("collapsed"));
 function setPinned(id){
   pinned = id;
+  if (id) setIndOpen(true);
   pinLine.attr("d", id ? path(byId.get(id)) : null);
   indPanel();
 }
