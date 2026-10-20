@@ -6,7 +6,7 @@ Internal research tool for Leadership Now Project's AI tax policy work. A county
 - **Labor market distress**: W.E. Upjohn Institute for Employment Research, Local Labor Market Distress Dataset (prime-age 25–54 employment rate).
 - **Industry mix**: BLS Quarterly Census of Employment and Wages (QCEW), 2024 annual average employment by county (Connecticut uses 2023).
 
-This project was split out of a single-file Claude artifact ("AI Exposure, Distress & Industry") so it can be extended into a fuller dashboard. Behavior is unchanged from that artifact.
+This project was split out of a single-file Claude artifact ("AI Exposure, Distress & Industry") so it can be extended into a fuller dashboard. It has since added the Exposure × industry view and multi-group legend selection.
 
 ## Run it
 
@@ -49,9 +49,14 @@ The `data/*.js` files are single very long lines (~200–800 KB). Don't open the
 ## Classification rules (keep consistent)
 
 - Exposure: county terciles (low / mid / high).
-- Distress (3-way, used in the bivariate overlay): healthy ≥ 80%, marginal 76.5–80%, distressed < 76.5%, matching Upjohn's own thresholds.
+- Distress (3-way, used in the Exposure × distress view): healthy ≥ 80%, marginal 76.5–80%, distressed < 76.5%, matching Upjohn's own thresholds.
 - Upjohn 5-way thresholds: ≥ 82.8% fully employed, 80–82.8% close, 76.5–80% marginal, 72.3–76.5% distressed, < 72.3% severely distressed.
-- Largest industry: government (fed + state + local) vs. 10 private supersectors. A county is striped when withheld jobs exceed the gap between its top two sectors.
+- Largest industry: government (fed + state + local) vs. 10 private supersectors, folded into 7 display groups (`LCAT`; small sectors go to "Other"). A county is striped when withheld jobs exceed the gap between its top two sectors.
+- Exposure × industry: fill is the exposure tercile only (gold ramp `XI`); industry is read from the legend matrix (`LCAT` rows × terciles). Don't color it by industry hue × exposure lightness: 21 colors on a choropleth can't be told apart. Stripes show only once a group is isolated.
+
+## Map views
+
+Tab order and `view` keys in `src/app.js`: Exposure × distress (`bi`), Exposure × industry (`xi`), AI exposure (`ex`), Labor distress (`ds`), Largest industry (`gv`). Each view has a branch in `fill`, `selKey`, `legend` and `selLabel`; a new view needs all four plus a button in `index.html` and an entry in the view-toggle list. Legend selection keys: `bi` = `"distress-exposure"`, `xi` = `"<LCAT key>|<tercile>"`, `ds` = Upjohn category name, `gv` = `LCAT` key.
 
 ## Rebuilding data
 
