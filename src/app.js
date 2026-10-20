@@ -378,13 +378,15 @@ const zoom = d3.zoom().scaleExtent([0.6,40]).translateExtent([[-585,-366],[1560,
   g.attr("transform", e.transform);
   pat.attr("patternTransform", `scale(${1/e.transform.k}) rotate(45)`);
 });
-svg.call(zoom);
+// Starting view: 85% scale, centered, so the edges of the country peek out from under the floating panels
+const START_K = 0.85, START = d3.zoomIdentity.translate(975*(1-START_K)/2, 610*(1-START_K)/2).scale(START_K);
+svg.call(zoom).call(zoom.transform, START);
 function zoomTo(feat){
   const [[x0,y0],[x1,y1]] = path.bounds(feat);
   const k = Math.min(40, 0.9/Math.max((x1-x0)/975,(y1-y0)/610));
   return svg.transition().duration(reduce?0:650).call(zoom.transform, d3.zoomIdentity.translate(487.5,305).scale(k).translate(-(x0+x1)/2,-(y0+y1)/2));
 }
-function zoomOut(){ svg.transition().duration(reduce?0:650).call(zoom.transform, d3.zoomIdentity); }
+function zoomOut(){ svg.transition().duration(reduce?0:650).call(zoom.transform, START); }
 function focusCounty(id){
   const f = byId.get(id); if (!f) return;
   hideTip(); setPinned(id);
