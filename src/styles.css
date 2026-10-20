@@ -28,7 +28,6 @@ h1,h2,h3{font-family:var(--font-display)}
 .card{background:#fff;border:1px solid var(--color-border)}
 .main{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
 .mapcol{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:16px}
-aside{flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:16px}
 
 /* Selection summary (KPI strip) */
 .summary-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;padding:16px 20px;border-bottom:1px solid var(--color-border)}
@@ -150,14 +149,17 @@ svg#map{display:block;width:100%;height:auto;aspect-ratio:975/610;touch-action:n
 .ind-key span{display:flex;align-items:center;gap:6px}
 .ind-key i{width:14px;height:8px;background:var(--lnp-navy-deep)}
 .ind-key b{width:2px;height:12px;background:var(--tick)}
-/* Industry mix floats over the map's lower-left corner (Pacific / Alaska); stacks under the map on narrow screens */
-.indfloat{position:absolute;left:12px;bottom:12px;z-index:4;width:268px;max-height:calc(100% - 24px);display:flex;flex-direction:column;background:#fff;border:1px solid var(--color-border);border-top:3px solid var(--lnp-gold);box-shadow:var(--shadow-2)}
+/* Cards floating over the map: legend top-right, industry mix lower-left (Pacific / Alaska); both stack under the map on narrow screens */
+.mapfloat{position:absolute;z-index:4;max-height:calc(100% - 24px);background:#fff;border:1px solid var(--color-border);border-top:3px solid var(--lnp-gold);box-shadow:var(--shadow-2)}
+.indfloat{left:12px;bottom:12px;width:268px;display:flex;flex-direction:column}
+.legfloat{top:12px;right:12px;width:320px;padding:14px 16px 16px;overflow-y:auto;overscroll-behavior:contain}
+.legfloat .sub{margin-bottom:12px;font-size:12px}
 /* See-through until the pointer or keyboard focus is on it, so the map underneath stays visible; touch screens have no hover, so they keep it solid */
 @media (hover:hover){
-  .indfloat{opacity:.45;transition:opacity 150ms}
-  .indfloat:hover,.indfloat:focus-within{opacity:1}
+  .mapfloat{opacity:.45;transition:opacity 150ms}
+  .mapfloat:hover,.mapfloat:focus-within{opacity:1}
 }
-@media (hover:hover) and (prefers-reduced-motion:reduce){ .indfloat{transition:none} }
+@media (hover:hover) and (prefers-reduced-motion:reduce){ .mapfloat{transition:none} }
 .if-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px}
 .if-head h2{margin:0;font-weight:700;font-size:12px;line-height:1.3;letter-spacing:.1em;text-transform:uppercase;color:var(--lnp-navy-deep)}
 .if-tog{appearance:none;flex:none;padding:4px 8px;background:#fff;border:1px solid var(--color-border-strong);font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-fg-muted);cursor:pointer}
@@ -174,7 +176,7 @@ svg#map{display:block;width:100%;height:auto;aspect-ratio:975/610;touch-action:n
 .indfloat .ind .bar b{top:-2px;bottom:-2px}
 .indfloat .ind-key{margin-top:10px;padding-top:10px}
 @media (max-width:760px){
-  .indfloat{position:static;width:auto;max-height:none;box-shadow:none;border:0;border-top:3px solid var(--lnp-gold);opacity:1}
+  .mapfloat{position:static;width:auto;max-height:none;box-shadow:none;border:0;border-top:3px solid var(--lnp-gold);opacity:1}
 }
 .empty{margin:0;padding:16px 0;font-size:13px;color:var(--color-fg-muted)}
 

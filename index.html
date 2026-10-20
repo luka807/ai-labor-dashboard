@@ -57,7 +57,8 @@
       <div class="mapwrap" id="mapwrap">
         <svg id="map" viewBox="0 0 975 610" role="img" aria-label="Map of U.S. counties shaded by the selected measure"></svg>
         <div class="tip" id="tip" role="status" hidden></div>
-        <section class="indfloat" id="indPanel" aria-labelledby="ind-h">
+        <section class="panel mapfloat legfloat" id="legendPanel" aria-label="Legend"></section>
+        <section class="mapfloat indfloat" id="indPanel" aria-labelledby="ind-h">
           <div class="if-head">
             <h2 id="ind-h">Industry mix of local jobs</h2>
             <button type="button" class="if-tog" id="indTog" aria-expanded="true" aria-controls="indBody">Hide</button>
@@ -84,10 +85,6 @@
       </div>
     </details>
     </div>
-
-    <aside>
-      <section class="card panel" id="legendPanel"></section>
-    </aside>
   </div>
 </main>
 
