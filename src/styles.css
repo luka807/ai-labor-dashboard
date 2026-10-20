@@ -116,6 +116,14 @@ svg#map{display:block;width:100%;height:auto;aspect-ratio:975/610;touch-action:n
 .hatch-row{display:flex;align-items:flex-start;gap:10px;padding:9px 6px 0}
 .hatch-row i{width:16px;height:16px;flex:none;margin-top:1px;background:repeating-linear-gradient(45deg,#fff 0 1.5px,#8A8C93 1.5px 4px)}
 .hatch-row .lbl{flex:1;min-width:0;font-size:12px;line-height:1.4;color:var(--color-fg-muted)}
+.xi{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,46px) 44px;grid-auto-rows:minmax(34px,auto);gap:2px;align-items:stretch}
+.xi .xrow,.xi .xcol{appearance:none;margin:0;padding:2px 6px 2px 0;background:none;border:0;cursor:pointer;font-size:12px;line-height:1.25;color:var(--lnp-ink);text-align:right;transition:opacity 200ms}
+.xi .xrow:hover,.xi .xcol:hover{background:var(--lnp-gray-50)}
+.xi .xcol{padding:0;text-align:center;align-self:end;color:var(--color-fg-muted);font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;min-height:24px}
+.xi .cell{font-size:13px}
+.xi .xhi{display:flex;align-items:center;justify-content:flex-end;font-size:12px;font-weight:600;color:var(--lnp-navy-deep)}
+.xi .xh{align-self:end;font-family:var(--font-display);font-weight:700;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-fg-muted);min-height:24px}
+.xi-x{margin:6px 44px 0 0;text-align:right}
 .legend-note{margin:10px 0 0;font-size:12px;color:var(--color-fg-muted)}
 
 /* Industry mix */

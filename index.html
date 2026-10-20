@@ -44,6 +44,7 @@
           <button type="button" id="v-ex" aria-pressed="false">AI exposure</button>
           <button type="button" id="v-ds" aria-pressed="false">Labor distress</button>
           <button type="button" id="v-gv" aria-pressed="false">Largest industry</button>
+          <button type="button" id="v-xi" aria-pressed="false">Exposure × industry</button>
         </div>
         <div class="spacer"></div>
         <div class="controls">
@@ -125,7 +126,7 @@
       </div>
       <div class="method-col">
         <h3>Map groups <span>This dashboard</span></h3>
-        <p>AI exposure is split into county terciles: <span id="terciles"></span>. The overlay map crosses these with the three distress groups above. The <strong>exposure share</strong> in the summary is job-weighted.</p>
+        <p>AI exposure is split into county terciles: <span id="terciles"></span>. The overlay map crosses these with the three distress groups above; the exposure × industry map crosses them with each county's largest sector. The <strong>exposure share</strong> in the summary is job-weighted.</p>
         <p>Valdez-Cordova, AK and Kalawao, HI have no exposure data and Loving, TX has no employment rate; they are shown in gray.</p>
       </div>
     </div>

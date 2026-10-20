@@ -59,6 +59,8 @@ const BI = [
 const EXP_LBL = ["Low","Mid","High"], DIS_LBL = ["Healthy","Marginal","Distressed"];
 const CAT5 = ["Fully employed","Close to fully employed","Marginally distressed","Distressed","Severely distressed"];
 const CAT5C = ["#DDE3EC","#AFBBD0","#8297BB","#4F6A98","#1E3A65"];
+// Exposure × industry view: exposure terciles as one gold ramp (light → dark); industry is read from the legend matrix
+const XI = ["#DDAA4E","#AD6F12","#6B3E05"];
 const NA = "#C9C9C4";
 const DIM = "#ECECE8"; // counties outside the isolated group / state: flat, lighter than the no-data gray
 const expScale = d3.scaleSequential(t => d3.interpolateRgb("#F6EEDB","#B26A00")(t)).domain([0.27,0.36]).clamp(true);
@@ -67,7 +69,7 @@ const ex = v => v==null ? null : v < Q1 ? 0 : v < Q2 ? 1 : 2;
 const ds = r => r < .765 ? 2 : r < .80 ? 1 : 0;
 
 const counties = topojson.feature(TOPO, TOPO.objects.counties).features;
-counties.forEach(f => { const r = R[f.id]; f.d = r; if (r) { f.ex = r[5]==null ? null : ex(r[2]); f.ds = r[5]==null ? null : ds(r[5]); } });
+counties.forEach(f => { const r = R[f.id]; f.d = r; if (r) { f.x3 = ex(r[2]); f.ex = r[5]==null ? null : ex(r[2]); f.ds = r[5]==null ? null : ds(r[5]); } });
 const byId = new Map(counties.map(f => [f.id, f]));
 const path = d3.geoPath();
 const svg = d3.select("#map"), g = svg.append("g");
@@ -89,6 +91,7 @@ function fill(f){
   if (view==="bi") return f.ex==null ? NA : BI[f.ds][f.ex];
   if (view==="ex") return f.d[2]==null ? NA : expScale(f.d[2]);
   if (view==="gv") { const t = TOPI[f.id]; return t ? LCAT[LCAT_IDX.get(t.cat)].c : NA; }
+  if (view==="xi") return f.x3==null ? NA : XI[f.x3];
   return CAT5.includes(f.d[6]) ? CAT5C[CAT5.indexOf(f.d[6])] : NA;
 }
 // In the isolated group and the filtered state (if any)
@@ -102,15 +105,19 @@ function selKey(f){
   if (view==="bi") return f.ex==null ? null : f.ds+"-"+f.ex;
   if (view==="ds") return f.d[6];
   if (view==="gv") return TOPI[f.id] ? TOPI[f.id].cat : null;
+  if (view==="xi") return TOPI[f.id] && f.x3!=null ? TOPI[f.id].cat+"|"+f.x3 : null;
   return null;
 }
 function toggleSel(k){ sel.has(k) ? sel.delete(k) : sel.add(k); render(); }
+// Toggle several groups at once (a matrix row or column): add all unless all are already on
+function toggleMany(ks){ const all = ks.every(k => sel.has(k)); ks.forEach(k => all ? sel.delete(k) : sel.add(k)); render(); }
 let painted = false;
 function render(){
   const t = painted && !reduce ? paths.transition().duration(200) : paths;
   t.attr("fill", f => active(f) ? fill(f) : DIM);
   painted = true;
-  hatch.attr("d", view==="gv" ? path({type:"FeatureCollection", features:counties.filter(f => TOPI[f.id] && !TOPI[f.id].sure && active(f))}) : null);
+  // Exposure × industry: stripes only once an industry is isolated, since the fill there does not show industry
+  hatch.attr("d", view==="gv" || (view==="xi" && sel.size) ? path({type:"FeatureCollection", features:counties.filter(f => TOPI[f.id] && !TOPI[f.id].sure && active(f))}) : null);
   // Outline the edge of the highlighted area: borders between highlighted and dimmed counties, plus coastlines
   const on = id => active(byId.get(id));
   selLine.attr("d", sel.size || stateF ? path(topojson.mesh(TOPO, TOPO.objects.counties, (a,b) => a===b ? on(a.id) : on(a.id)!==on(b.id))) : null);
@@ -214,6 +221,29 @@ function legend(){
         return `<button type="button" class="cat" style="opacity:${op(!sel.size || sel.has(d.key))}" data-k="${d.key}" aria-pressed="${sel.has(d.key)}" aria-label="Largest industry ${d.key}: ${n} counties"><i style="background:${d.c}"></i><span class="lbl">${d.key}${d.note?`<small>${d.note}</small>`:""}</span><span class="n">${n}</span></button>`; }).join("")}
         <div class="hatch-row"><i></i><span class="lbl">Striped: BLS withheld enough jobs that a different sector could be largest</span><span class="n">${num(unsure)}</span></div></div>`;
     el.querySelectorAll(".cat").forEach(b => b.onclick = () => toggleSel(b.dataset.k));
+  } else if (view==="xi"){
+    const withD = counties.filter(f=>inState(f) && TOPI[f.id] && f.x3!=null);
+    const cnt = d3.rollup(withD, v=>v.length, f=>TOPI[f.id].cat+"|"+f.x3);
+    const unsure = withD.filter(f=>!TOPI[f.id].sure).length;
+    const n = k => cnt.get(k)||0;
+    const colN = c => num(d3.sum(LCAT, d => n(d.key+"|"+c)));
+    const rows = LCAT.map(d => {
+      const ks = [0,1,2].map(c => d.key+"|"+c), tot = d3.sum(ks, n), on = !sel.size || ks.some(k => sel.has(k));
+      const cells = ks.map((k,c) => { const lbl = `Largest industry ${d.key}, ${EXP_LBL[c]} AI exposure: ${num(n(k))} counties`;
+        return `<button type="button" class="cell" style="background:${XI[c]};color:${c ? "#fff" : "#1F2024"};opacity:${op(!sel.size || sel.has(k))}" data-k="${k}" aria-pressed="${sel.has(k)}" aria-label="${lbl}" title="${lbl}">${num(n(k))}</button>`; }).join("");
+      return `<button type="button" class="xrow" style="opacity:${op(on)}" data-row="${d.key}" title="${d.note || d.key}: isolate all three exposure groups">${d.key}</button>${cells}<span class="xhi">${tot ? Math.round(n(d.key+"|2")/tot*100)+"%" : "–"}</span>`;
+    }).join("");
+    el.innerHTML = head("AI exposure by largest industry", `Rows are each county's largest sector (BLS, 2024); columns are AI exposure terciles. Numbers are county counts${where}. Click squares, a row name or a column name to isolate.`) +
+      `<div class="xi">
+        <span></span>${[0,1,2].map(c => `<button type="button" class="xcol" data-col="${c}" title="${EXP_LBL[c]} exposure: ${colN(c)} counties">${EXP_LBL[c]}</button>`).join("")}<span class="xhi xh" title="Share of the row's counties in the high-exposure tercile">% high</span>
+        ${rows}
+      </div>
+      <div class="axis xi-x">AI exposure share →</div>
+      <div class="hatch-row"><i></i><span class="lbl">Striped when isolated: BLS withheld enough jobs that a different sector could be largest</span><span class="n">${num(unsure)}</span></div>
+      <p class="legend-note">"Other" is professional services, construction, finance, information and other services.</p>`;
+    el.querySelectorAll(".cell").forEach(b => b.onclick = () => toggleSel(b.dataset.k));
+    el.querySelectorAll(".xrow").forEach(b => b.onclick = () => toggleMany([0,1,2].map(c => b.dataset.row+"|"+c)));
+    el.querySelectorAll(".xcol").forEach(b => b.onclick = () => toggleMany(LCAT.map(d => d.key+"|"+b.dataset.col)));
   } else {
     const cnt = d3.rollup(counties.filter(inState), v=>v.length, f=>f.d[6]);
     el.innerHTML = head("Labor distress", `Prime-age employment rate ranking. Counts are counties${where}. Click to isolate one or more.`) +
@@ -233,6 +263,14 @@ function selLabel(){
     return ks.map(k => { const [r,c] = k.split("-"); return `${DIS_LBL[r]} · ${EXP_LBL[c]} exposure`; }).join(", ");
   }
   if (view==="ds") return CAT5.filter(c => sel.has(c)).join(", ");
+  if (view==="xi"){
+    // Collapse full rows / columns into one phrase each
+    const parts = [], left = new Set(sel);
+    LCAT.forEach(d => { const ks = [0,1,2].map(c => d.key+"|"+c); if (ks.every(k => left.has(k))){ parts.push(d.key); ks.forEach(k => left.delete(k)); } });
+    [0,1,2].forEach(c => { const ks = LCAT.map(d => d.key+"|"+c); if (ks.every(k => left.has(k))){ parts.push(`${EXP_LBL[c]} AI exposure`); ks.forEach(k => left.delete(k)); } });
+    LCAT.forEach(d => [0,1,2].forEach(c => { if (left.has(d.key+"|"+c)) parts.push(`${d.key} · ${EXP_LBL[c]} exposure`); }));
+    return parts.join(", ");
+  }
   return "Largest industry: " + LCAT.map(d => d.key).filter(k => sel.has(k)).join(", ");
 }
 
@@ -305,7 +343,7 @@ function showTip(f){
     rows.push(["Government share of jobs", pct(govShare(f.id))], ["Largest sector", `${L.lbl} (${pct(L.share)})`]);
   }
   const unsure = TOPI[f.id] && !TOPI[f.id].sure;
-  const sw = view==="bi" && f.ex!=null ? `<div class="sw"><i style="background:${BI[f.ds][f.ex]}"></i><span>${DIS_LBL[f.ds]} · ${EXP_LBL[f.ex]} exposure</span></div>` : "";
+  const sw = view==="xi" && f.x3!=null ? `<div class="sw"><i style="background:${XI[f.x3]}"></i><span>${EXP_LBL[f.x3]} exposure${TOPI[f.id] ? " · " + TOPI[f.id].lbl : ""}</span></div>` : view==="bi" && f.ex!=null ? `<div class="sw"><i style="background:${BI[f.ds][f.ex]}"></i><span>${DIS_LBL[f.ds]} · ${EXP_LBL[f.ex]} exposure</span></div>` : "";
   tip.innerHTML = `<div class="name">${d[0]}</div>${rows.map(([k,v]) => `<div class="row"><span>${k}</span><span>${v}</span></div>`).join("")}
     ${unsure ? `<div class="unsure">Uncertain: withheld jobs could change this</div>` : ""}
     <div class="tfoot">${sw}<div>Labor market: ${d[8]}</div></div>`;
@@ -372,7 +410,7 @@ document.getElementById("reset").onclick = () => {
 };
 
 // View toggle
-[["v-bi","bi"],["v-ex","ex"],["v-ds","ds"],["v-gv","gv"]].forEach(([id,v]) => document.getElementById(id).onclick = () => {
+[["v-bi","bi"],["v-ex","ex"],["v-ds","ds"],["v-gv","gv"],["v-xi","xi"]].forEach(([id,v]) => document.getElementById(id).onclick = () => {
   if (view === v) return;
   view = v; sel.clear();
   document.querySelectorAll("#mapbox .seg button").forEach(b => b.setAttribute("aria-pressed", b.id===id));
