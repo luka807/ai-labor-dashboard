@@ -153,8 +153,23 @@ svg#map:active{cursor:grabbing}
 /* Cards floating over the map: legend top-right, industry mix lower-left (Pacific / Alaska); both stack under the map on narrow screens */
 .mapfloat{position:absolute;z-index:4;max-height:calc(100% - 24px);background:#fff;border:1px solid var(--color-border);border-top:3px solid var(--lnp-gold);box-shadow:var(--shadow-2)}
 .indfloat{left:12px;bottom:12px;width:268px;display:flex;flex-direction:column}
-.legfloat{top:12px;right:12px;width:320px;padding:14px 16px 16px;overflow-y:auto;overscroll-behavior:contain}
-.legfloat .sub{margin-bottom:12px;font-size:12px}
+.legfloat{top:12px;right:12px;width:280px;padding:12px 14px 14px;overflow-y:auto;overscroll-behavior:contain}
+.legfloat h2{font-size:12px}
+.legfloat .gold{margin:8px 0}
+.legfloat .sub{margin-bottom:10px;font-size:11.5px;line-height:1.4}
+/* Compact grids: overlay 3×3 at 48px cells, exposure × industry matrix at 40px */
+.legfloat .biv .ylab{height:148px}
+.legfloat .biv .rlab{grid-template-rows:repeat(3,48px);font-size:11.5px}
+.legfloat .grid3{grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px)}
+.legfloat .biv .ticks{grid-template-columns:repeat(3,48px);font-size:11.5px}
+.legfloat .cell{font-size:13px}
+.legfloat .xi{grid-template-columns:minmax(0,1fr) repeat(3,40px) 38px;grid-auto-rows:minmax(30px,auto)}
+.legfloat .xi .xrow{font-size:11.5px}
+.legfloat .xi .cell{font-size:12px}
+.legfloat .xi-x{margin-right:38px}
+.legfloat .cat{padding:5px 4px}
+.legfloat .cat .lbl{font-size:12px}
+.legfloat .legend-note,.legfloat .hatch-row .lbl{font-size:11.5px}
 /* See-through until the pointer or keyboard focus is on it, so the map underneath stays visible; touch screens have no hover, so they keep it solid */
 @media (hover:hover){
   .mapfloat{opacity:.45;transition:opacity 150ms}
