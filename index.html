@@ -77,6 +77,7 @@
       <p class="note">Scroll or pinch to zoom, drag to pan. Click legend squares to isolate one or more groups. Click a county to see its industry mix.</p>
     </section>
 
+    <div class="drops">
     <details class="card drop" id="topPanel">
       <summary><span class="drop-t">Most exposed jobs in distressed counties</span><span class="drop-meta" id="topMeta"></span></summary>
       <div class="drop-body">
@@ -84,6 +85,14 @@
         <ol class="top" id="top"></ol>
       </div>
     </details>
+    <details class="card drop" id="popPanel">
+      <summary><span class="drop-t">Most populous counties in selection</span><span class="drop-meta" id="popMeta"></span></summary>
+      <div class="drop-body">
+        <p class="sub">Counties in the current selection (legend groups and state filter), ranked by total population. Click a county to locate it on the map.</p>
+        <ol class="top" id="pop"></ol>
+      </div>
+    </details>
+    </div>
     </div>
   </div>
 </main>

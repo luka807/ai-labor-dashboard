@@ -121,7 +121,7 @@ function render(){
   // Outline the edge of the highlighted area: borders between highlighted and dimmed counties, plus coastlines
   const on = id => active(byId.get(id));
   selLine.attr("d", sel.size || stateF ? path(topojson.mesh(TOPO, TOPO.objects.counties, (a,b) => a===b ? on(a.id) : on(a.id)!==on(b.id))) : null);
-  legend(); stats(); indPanel();
+  legend(); stats(); indPanel(); popList();
 }
 
 // Industry mix panel
@@ -333,6 +333,17 @@ function topList(){
     <span class="tx"><span class="nm">${f.d[0]}</span><span class="mt">${num(f.d[3])} jobs · ${pct(f.d[2])} · emp. ${pct(f.d[5])}</span></span></button></li>`).join("")
     : `<li class="none">None in this state.</li>`;
   document.getElementById("topMeta").textContent = fs.length ? `Top ${fs.length}${stateF ? " in " + stateF : ""}` : "None in this state";
+  ol.querySelectorAll("button[data-id]").forEach(b => b.onclick = () => focusCounty(b.dataset.id));
+}
+// Most populous counties in the current selection; follows legend groups and the state filter
+function popList(){
+  const fs = counties.filter(f => f.d && inSel(f) && (!stateF || f.d[1]===stateF))
+    .sort((a,b)=>b.d[7]-a.d[7]).slice(0,10);
+  const ol = document.getElementById("pop");
+  ol.innerHTML = fs.length ? fs.map((f,i)=>`<li><button type="button" data-id="${f.id}"><span class="rk">${String(i+1).padStart(2,"0")}</span>
+    <span class="tx"><span class="nm">${f.d[0]}</span><span class="mt">pop. ${num(f.d[7])} · ${pct(f.d[2])} exposed · emp. ${pct(f.d[5])}</span></span></button></li>`).join("")
+    : `<li class="none">No counties in this selection.</li>`;
+  document.getElementById("popMeta").textContent = fs.length ? `Top ${fs.length} · ${document.getElementById("sumSub").textContent}` : "None in this selection";
   ol.querySelectorAll("button[data-id]").forEach(b => b.onclick = () => focusCounty(b.dataset.id));
 }
 

@@ -219,6 +219,9 @@ ol.top .none{border:0;padding:10px 0;font-size:13px;color:var(--color-fg-muted)}
 .drop .sub{margin:0 0 16px;font-size:13px;line-height:1.45;color:var(--color-fg-muted);text-wrap:pretty}
 .drop ol.top{display:block;columns:2 300px;column-gap:32px}
 .drop ol.top li{break-inside:avoid}
+/* The dropdown lists sit side by side under the map, stacking when narrow */
+.drops{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:16px;align-items:start}
+.drop-meta{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 
 /* Footer: methodology */
 .foot{border-top:1px solid var(--color-border);background:#fff}
