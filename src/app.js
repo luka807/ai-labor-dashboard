@@ -149,6 +149,13 @@ function setIndOpen(open){
   indTog.textContent = open ? "Hide" : "Show";
 }
 indTog.onclick = () => setIndOpen(indEl.classList.contains("collapsed"));
+// The legend collapses to its title the same way; it stays collapsed across view changes until reopened
+const legEl = document.getElementById("legendPanel"), legTog = document.getElementById("legTog");
+legTog.onclick = () => {
+  const open = legEl.classList.toggle("collapsed") === false;
+  legTog.setAttribute("aria-expanded", open);
+  legTog.textContent = open ? "Hide" : "Show";
+};
 function setPinned(id){
   pinned = id;
   if (id) setIndOpen(true);
@@ -195,7 +202,7 @@ function indPanel(){
 
 // Legend
 function legend(){
-  const el = document.getElementById("legendPanel");
+  const el = document.getElementById("legBody");
   const head = (t, s) => `<h2>${t}</h2><div class="gold"></div><p class="sub">${s}</p>`;
   const op = on => on ? 1 : 0.2;
   // Counts follow the state filter

@@ -62,7 +62,10 @@
           <button type="button" id="zfit" aria-label="Reset map view" title="Reset map view"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg></button>
         </div>
         <div class="tip" id="tip" role="status" hidden></div>
-        <section class="panel mapfloat legfloat" id="legendPanel" aria-label="Legend"></section>
+        <section class="panel mapfloat legfloat" id="legendPanel" aria-label="Legend">
+          <button type="button" class="if-tog leg-tog" id="legTog" aria-expanded="true" aria-controls="legBody">Hide</button>
+          <div id="legBody"></div>
+        </section>
         <section class="mapfloat indfloat" id="indPanel" aria-labelledby="ind-h">
           <div class="if-head">
             <h2 id="ind-h">Industry mix of local jobs</h2>
