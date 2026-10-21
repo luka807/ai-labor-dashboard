@@ -45,7 +45,8 @@ function topInfo(id){
   return {lbl:v[0].lbl, share:v[0].v/r[14], cat:catOf(v[0].lbl), sure:(v[0].v - v[1].v) >= r[13], second:v[1].lbl};
 }
 const TOPI = {}; Object.keys(IND).forEach(id => TOPI[id] = topInfo(id));
-const pct = v => v==null ? "n/a" : (v*100).toFixed(1)+"%";
+// Nonzero values under 0.1% show as "<0.1%" so small counties don't read as zero
+const pct = v => v==null ? "n/a" : v > 0 && v < 0.001 ? "<0.1%" : (v*100).toFixed(1)+"%";
 const num = d3.format(",");
 const compact = n => n >= 1e9 ? (n/1e9).toFixed(2)+"B" : n >= 1e6 ? (n/1e6).toFixed(1)+"M" : num(n);
 document.getElementById("terciles").textContent = `low < ${pct(Q1)}, mid ${pct(Q1)}–${pct(Q2)}, high ≥ ${pct(Q2)}`;
