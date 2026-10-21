@@ -147,6 +147,7 @@ function setIndOpen(open){
   indEl.classList.toggle("collapsed", !open);
   indTog.setAttribute("aria-expanded", open);
   indTog.textContent = open ? "Hide" : "Show";
+  indTog.setAttribute("aria-label", (open ? "Hide" : "Show") + " industry mix"); // says what it hides, for screen readers
 }
 indTog.onclick = () => setIndOpen(indEl.classList.contains("collapsed"));
 // The legend collapses to its title the same way; it stays collapsed across view changes until reopened
@@ -155,6 +156,7 @@ legTog.onclick = () => {
   const open = legEl.classList.toggle("collapsed") === false;
   legTog.setAttribute("aria-expanded", open);
   legTog.textContent = open ? "Hide" : "Show";
+  legTog.setAttribute("aria-label", (open ? "Hide" : "Show") + " legend");
 };
 function setPinned(id){
   pinned = id;

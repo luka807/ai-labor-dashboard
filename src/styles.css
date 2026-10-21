@@ -185,6 +185,8 @@ svg#map:active{cursor:grabbing}
 @media (hover:hover){
   .mapfloat{opacity:.45;transition:opacity 150ms}
   .mapfloat:hover,.mapfloat:focus-within{opacity:1}
+  /* A collapsed panel is just a small title bar, so it stays solid and easy to find */
+  .mapfloat.collapsed{opacity:1}
 }
 @media (hover:hover) and (prefers-reduced-motion:reduce){ .mapfloat{transition:none} }
 .if-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px}
