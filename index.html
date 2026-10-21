@@ -82,22 +82,24 @@
       <p class="note">Scroll, pinch or use the + and − buttons to zoom; drag to pan. Click legend squares to isolate one or more groups. Click a county to see its industry mix.</p>
     </section>
 
-    <div class="drops">
-    <details class="card drop" id="topPanel">
-      <summary><span class="drop-t">Most exposed jobs in distressed counties</span><span class="drop-meta" id="topMeta"></span></summary>
-      <div class="drop-body">
-        <p class="sub">High-exposure tercile and prime-age employment below 76.5%, ranked by number of AI-exposed jobs. Click a county to locate it on the map.</p>
-        <ol class="top" id="top"></ol>
+    <section class="card detail" id="detailPanel" aria-labelledby="det-h">
+      <div class="det-head">
+        <div class="det-title">
+          <h2 id="det-h">County details</h2>
+          <p class="det-sub" id="detSub"></p>
+        </div>
+        <div class="seg seg-sm" role="group" aria-label="Rows shown" id="detN">
+          <button type="button" data-n="10" aria-pressed="true">Top 10</button>
+          <button type="button" data-n="all" aria-pressed="false" id="detAll">All</button>
+        </div>
       </div>
-    </details>
-    <details class="card drop" id="popPanel">
-      <summary><span class="drop-t">Most populous counties in selection</span><span class="drop-meta" id="popMeta"></span></summary>
-      <div class="drop-body">
-        <p class="sub">Counties in the current selection (legend groups and state filter), ranked by total population. Click a county to locate it on the map.</p>
-        <ol class="top" id="pop"></ol>
+      <div class="det-wrap">
+        <table class="det">
+          <thead><tr id="detHead"></tr></thead>
+          <tbody id="detBody"></tbody>
+        </table>
       </div>
-    </details>
-    </div>
+    </section>
     </div>
   </div>
 </main>

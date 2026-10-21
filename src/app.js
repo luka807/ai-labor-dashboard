@@ -121,7 +121,7 @@ function render(){
   // Outline the edge of the highlighted area: borders between highlighted and dimmed counties, plus coastlines
   const on = id => active(byId.get(id));
   selLine.attr("d", sel.size || stateF ? path(topojson.mesh(TOPO, TOPO.objects.counties, (a,b) => a===b ? on(a.id) : on(a.id)!==on(b.id))) : null);
-  legend(); stats(); indPanel(); popList();
+  legend(); stats(); indPanel(); detail();
 }
 
 // Industry mix panel
@@ -324,28 +324,53 @@ statsEl.addEventListener("click", e => { const b = e.target.closest(".qm"); if (
 document.addEventListener("keydown", e => { if (e.key === "Escape") hideDef(); });
 window.addEventListener("scroll", hideDef, {passive:true});
 
-// Top list
-function topList(){
-  const fs = counties.filter(f => f.d && f.ex===2 && f.ds===2 && (!stateF || f.d[1]===stateF))
-    .sort((a,b)=>b.d[3]-a.d[3]).slice(0,10);
-  const ol = document.getElementById("top");
-  ol.innerHTML = fs.length ? fs.map((f,i)=>`<li><button type="button" data-id="${f.id}"><span class="rk">${String(i+1).padStart(2,"0")}</span>
-    <span class="tx"><span class="nm">${f.d[0]}</span><span class="mt">${num(f.d[3])} jobs · ${pct(f.d[2])} · emp. ${pct(f.d[5])}</span></span></button></li>`).join("")
-    : `<li class="none">None in this state.</li>`;
-  document.getElementById("topMeta").textContent = fs.length ? `Top ${fs.length}${stateF ? " in " + stateF : ""}` : "None in this state";
-  ol.querySelectorAll("button[data-id]").forEach(b => b.onclick = () => focusCounty(b.dataset.id));
+// County details table: every county in the current selection (legend groups + state filter), sortable by any column
+const DET_COLS = [
+  {k:"name",  lbl:"County",                 get:d=>d[0], txt:true},
+  {k:"pop",   lbl:"Population",             get:d=>d[7], fmt:num},
+  {k:"jobs",  lbl:"Jobs",                   get:d=>d[4], fmt:num},
+  {k:"share", lbl:"Share of selected jobs", get:d=>d[4]}, // formatted against the selection's job total
+  {k:"ex",    lbl:"AI exposure",            get:d=>d[2], fmt:pct},
+  {k:"emp",   lbl:"Prime-age employment",   get:d=>d[5], fmt:pct}
+];
+let detSort = {k:"pop", dir:-1}, detAll = false;
+const detBody = document.getElementById("detBody"), detHead = document.getElementById("detHead");
+function detail(){
+  const fs = counties.filter(f => f.d && inSel(f) && (!stateF || f.d[1]===stateF));
+  const tj = d3.sum(fs, f => f.d[4]||0);
+  const col = DET_COLS.find(c => c.k===detSort.k);
+  // Missing values sort last in either direction
+  const rows = fs.slice().sort((a,b) => {
+    const x = col.get(a.d), y = col.get(b.d);
+    if (x==null || y==null) return (x==null) - (y==null);
+    return col.txt ? detSort.dir * x.localeCompare(y) : detSort.dir * (x - y);
+  });
+  const shown = detAll ? rows : rows.slice(0,10);
+  const sortLbl = {name:"name", pop:"population", jobs:"jobs", share:"share of jobs", ex:"AI exposure", emp:"prime-age employment"}[detSort.k];
+  document.getElementById("detSub").textContent = `${document.getElementById("sumSub").textContent}: ${num(fs.length)} counties, ${num(tj)} jobs. ${detAll ? "All" : `Top ${shown.length}`} by ${sortLbl}. Click a county to find it on the map.`;
+  document.getElementById("detAll").textContent = `All ${num(fs.length)}`;
+  detHead.innerHTML = `<th scope="col" class="rk"><span class="vh">Rank</span></th>` + DET_COLS.map(c => {
+    const on = c.k===detSort.k;
+    return `<th scope="col" class="${c.txt ? "c-name" : ""}"${on ? ` aria-sort="${detSort.dir>0 ? "ascending" : "descending"}"` : ""}><button type="button" data-k="${c.k}">${c.lbl}</button></th>`;
+  }).join("");
+  detBody.innerHTML = shown.length ? shown.map((f,i) => `<tr><td class="rk">${i+1}</td>
+    <td class="c-name"><button type="button" data-id="${f.id}">${f.d[0]}</button></td>
+    ${DET_COLS.slice(1).map(c => `<td>${c.k==="share" ? (tj && f.d[4]!=null ? pct(f.d[4]/tj) : "n/a") : c.fmt(c.get(f.d))}</td>`).join("")}</tr>`).join("")
+    : `<tr><td class="none" colspan="${DET_COLS.length+1}">No counties in this selection. Clear a filter or pick other legend groups.</td></tr>`;
 }
-// Most populous counties in the current selection; follows legend groups and the state filter
-function popList(){
-  const fs = counties.filter(f => f.d && inSel(f) && (!stateF || f.d[1]===stateF))
-    .sort((a,b)=>b.d[7]-a.d[7]).slice(0,10);
-  const ol = document.getElementById("pop");
-  ol.innerHTML = fs.length ? fs.map((f,i)=>`<li><button type="button" data-id="${f.id}"><span class="rk">${String(i+1).padStart(2,"0")}</span>
-    <span class="tx"><span class="nm">${f.d[0]}</span><span class="mt">pop. ${num(f.d[7])} · ${pct(f.d[2])} exposed · emp. ${pct(f.d[5])}</span></span></button></li>`).join("")
-    : `<li class="none">No counties in this selection.</li>`;
-  document.getElementById("popMeta").textContent = fs.length ? `Top ${fs.length} · ${document.getElementById("sumSub").textContent}` : "None in this selection";
-  ol.querySelectorAll("button[data-id]").forEach(b => b.onclick = () => focusCounty(b.dataset.id));
-}
+// Same column again flips the order; a new column starts at the largest values (A–Z for names)
+detHead.addEventListener("click", e => {
+  const b = e.target.closest("button[data-k]"); if (!b) return;
+  detSort = detSort.k===b.dataset.k ? {k:b.dataset.k, dir:-detSort.dir} : {k:b.dataset.k, dir:b.dataset.k==="name" ? 1 : -1};
+  detail();
+});
+detBody.addEventListener("click", e => { const b = e.target.closest("button[data-id]"); if (b) focusCounty(b.dataset.id); });
+document.getElementById("detN").addEventListener("click", e => {
+  const b = e.target.closest("button[data-n]"); if (!b) return;
+  detAll = b.dataset.n==="all";
+  document.querySelectorAll("#detN button").forEach(x => x.setAttribute("aria-pressed", x===b));
+  detail();
+});
 
 // Tooltip
 const tip = document.getElementById("tip"), wrap = document.getElementById("mapwrap");
@@ -433,7 +458,7 @@ stSel.onchange = () => {
   stateF = stSel.value;
   const sf = states.find(s => s.properties.name === stateF);
   if (sf) zoomTo(sf); else zoomOut();
-  render(); topList();
+  render();
 };
 
 // Search
@@ -443,7 +468,7 @@ document.getElementById("search").onchange = e => { const id = byName.get(e.targ
 
 document.getElementById("reset").onclick = () => {
   sel.clear(); stateF = ""; stSel.value = ""; document.getElementById("search").value = "";
-  hideTip(); setPinned(null); zoomOut(); render(); topList();
+  hideTip(); setPinned(null); zoomOut(); render();
 };
 
 // View toggle
@@ -459,4 +484,4 @@ document.getElementById("reset").onclick = () => {
   indPanel();
 });
 
-render(); topList();
+render();

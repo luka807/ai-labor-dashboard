@@ -203,32 +203,28 @@ svg#map:active{cursor:grabbing}
 }
 .empty{margin:0;padding:16px 0;font-size:13px;color:var(--color-fg-muted)}
 
-/* Top-10 list */
-ol.top{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-ol.top li{border-top:1px solid var(--lnp-gray-100)}
-ol.top button{appearance:none;display:flex;gap:12px;align-items:baseline;width:100%;padding:8px 6px;margin:0;background:none;border:0;text-align:left;cursor:pointer;transition:background 120ms}
-ol.top button:hover{background:var(--lnp-gold-100)}
-ol.top .rk{font-family:var(--font-mono);font-size:12px;color:var(--lnp-navy-mid);flex:none;width:18px}
-ol.top .tx{min-width:0;display:flex;flex-direction:column}
-ol.top .nm{font-size:13px;font-weight:600;line-height:1.35;color:var(--lnp-navy-deep)}
-ol.top .mt{font-size:12px;line-height:1.4;color:var(--color-fg-muted)}
-ol.top .none{border:0;padding:10px 0;font-size:13px;color:var(--color-fg-muted)}
-
-/* Dropdown sections under the map */
-.drop summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:16px 48px 16px 20px;position:relative;list-style:none;cursor:pointer}
-.drop summary::-webkit-details-marker{display:none}
-.drop summary::after{content:"";position:absolute;right:22px;top:50%;width:8px;height:8px;margin-top:-6px;border-right:2px solid var(--lnp-navy-deep);border-bottom:2px solid var(--lnp-navy-deep);transform:rotate(45deg);transition:transform 150ms}
-.drop[open] summary::after{transform:rotate(-135deg);margin-top:-2px}
-.drop summary:hover{background:var(--lnp-gray-50)}
-.drop-t{font-family:var(--font-display);font-weight:700;font-size:13px;line-height:1.35;letter-spacing:.1em;text-transform:uppercase;color:var(--lnp-navy-deep)}
-.drop-meta{font-size:13px;color:var(--color-fg-muted)}
-.drop-body{padding:16px 20px 20px;border-top:1px solid var(--color-border)}
-.drop .sub{margin:0 0 16px;font-size:13px;line-height:1.45;color:var(--color-fg-muted);text-wrap:pretty}
-.drop ol.top{display:block;columns:2 300px;column-gap:32px}
-.drop ol.top li{break-inside:avoid}
-/* The dropdown lists sit side by side under the map, stacking when narrow */
-.drops{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:16px;align-items:start}
-.drop-meta{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+/* County details table under the map */
+.det-head{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:10px 20px;padding:16px 20px;border-bottom:1px solid var(--color-border)}
+.det-title{min-width:0;flex:1 1 320px}
+.det-title h2{margin:0;font-weight:700;font-size:17px;line-height:1.3;color:var(--lnp-navy-deep)}
+.det-sub{margin:4px 0 0;font-size:13px;line-height:1.45;color:var(--color-fg-muted);text-wrap:pretty}
+.det-wrap{max-height:560px;overflow:auto;overscroll-behavior:contain}
+table.det{width:100%;border-collapse:collapse;font-size:13px;line-height:1.35;font-variant-numeric:tabular-nums}
+.det th{position:sticky;top:0;z-index:1;padding:0;background:#fff;border-bottom:2px solid var(--lnp-navy-deep);text-align:right;font-weight:700;font-size:12px;color:var(--color-fg-muted);white-space:nowrap}
+.det th button{appearance:none;width:100%;margin:0;padding:10px 12px 8px;background:none;border:0;font:inherit;color:inherit;text-align:inherit;cursor:pointer}
+.det th button:hover{color:var(--lnp-ink);background:var(--lnp-gray-50)}
+.det th[aria-sort]{color:var(--lnp-navy-deep)}
+.det th[aria-sort] button::after{content:"";display:inline-block;margin-left:5px;border:4px solid transparent;vertical-align:1px}
+.det th[aria-sort="descending"] button::after{border-top:5px solid currentColor;border-bottom-width:0}
+.det th[aria-sort="ascending"] button::after{border-bottom:5px solid currentColor;border-top-width:0}
+.det td{padding:7px 12px;border-bottom:1px solid var(--lnp-gray-100);text-align:right;white-space:nowrap;color:var(--lnp-ink)}
+.det .c-name{text-align:left;width:100%}
+.det td.c-name button{appearance:none;margin:0;padding:0;background:none;border:0;font:inherit;font-weight:600;color:var(--lnp-navy-deep);text-align:left;cursor:pointer}
+.det td.c-name button:hover{text-decoration:underline}
+.det .rk{width:1%;padding-left:20px;padding-right:4px;color:var(--color-fg-subtle)}
+.det tbody tr:hover{background:var(--lnp-gold-100)}
+.det td.none{padding:16px 20px;text-align:left;white-space:normal;color:var(--color-fg-muted)}
+.vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}
 
 /* Footer: methodology */
 .foot{border-top:1px solid var(--color-border);background:#fff}
