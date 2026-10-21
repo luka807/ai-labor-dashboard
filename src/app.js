@@ -384,11 +384,21 @@ paths.on("pointerenter", (e,f) => { hoverLine.attr("d", path(f)); if (f.d) { sho
 svg.on("pointerleave", hideTip);
 
 // Zoom
-// Zoom out to 60% and drag the map anywhere, e.g. out from under the floating panels; the padded extent keeps it from being lost off-screen
-const zoom = d3.zoom().scaleExtent([0.6,40]).translateExtent([[-585,-366],[1560,976]]).on("zoom", e => {
-  g.attr("transform", e.transform);
-  pat.attr("patternTransform", `scale(${1/e.transform.k}) rotate(45)`);
-});
+// Zoom out to 60% and drag the map out from under the floating panels; the extent pads the map by about a third
+// on each side, so it can be moved clear of a panel but never pushed off-screen
+const K_MIN = 0.6, K_MAX = 40;
+const zin = document.getElementById("zin"), zout = document.getElementById("zout");
+const zoom = d3.zoom().scaleExtent([K_MIN,K_MAX]).translateExtent([[-340,-215],[1315,825]])
+  // Gentler wheel steps than d3's default (0.002 per pixel of scroll), so one flick doesn't jump several levels
+  .wheelDelta(e => -e.deltaY * (e.deltaMode === 1 ? 0.03 : e.deltaMode ? 0.6 : 0.0012) * (e.ctrlKey ? 10 : 1))
+  // A few pixels of hand jitter still counts as a click on a county, not a drag
+  .clickDistance(4)
+  .on("zoom", e => {
+    g.attr("transform", e.transform);
+    pat.attr("patternTransform", `scale(${1/e.transform.k}) rotate(45)`);
+    zin.disabled = e.transform.k >= K_MAX - 1e-6;
+    zout.disabled = e.transform.k <= K_MIN + 1e-6;
+  });
 // Starting view: 85% scale, centered, so the edges of the country peek out from under the floating panels
 const START_K = 0.85, START = d3.zoomIdentity.translate(975*(1-START_K)/2, 610*(1-START_K)/2).scale(START_K);
 svg.call(zoom).call(zoom.transform, START);
@@ -398,6 +408,10 @@ function zoomTo(feat){
   return svg.transition().duration(reduce?0:650).call(zoom.transform, d3.zoomIdentity.translate(487.5,305).scale(k).translate(-(x0+x1)/2,-(y0+y1)/2));
 }
 function zoomOut(){ svg.transition().duration(reduce?0:650).call(zoom.transform, START); }
+// Zoom buttons step around the middle of the map; the reset button returns to the starting view without clearing selections
+zin.onclick = () => svg.transition().duration(reduce?0:250).call(zoom.scaleBy, 1.6);
+zout.onclick = () => svg.transition().duration(reduce?0:250).call(zoom.scaleBy, 1/1.6);
+document.getElementById("zfit").onclick = zoomOut;
 function focusCounty(id){
   const f = byId.get(id); if (!f) return;
   hideTip(); setPinned(id);

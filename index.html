@@ -56,6 +56,11 @@
       </div>
       <div class="mapwrap" id="mapwrap">
         <svg id="map" viewBox="0 0 975 610" role="img" aria-label="Map of U.S. counties shaded by the selected measure"></svg>
+        <div class="zoomctl" role="group" aria-label="Map zoom">
+          <button type="button" id="zin" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button>
+          <button type="button" id="zout" aria-label="Zoom out" title="Zoom out"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/></svg></button>
+          <button type="button" id="zfit" aria-label="Reset map view" title="Reset map view"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg></button>
+        </div>
         <div class="tip" id="tip" role="status" hidden></div>
         <section class="panel mapfloat legfloat" id="legendPanel" aria-label="Legend"></section>
         <section class="mapfloat indfloat" id="indPanel" aria-labelledby="ind-h">
@@ -74,7 +79,7 @@
           </div>
         </section>
       </div>
-      <p class="note">Scroll or pinch to zoom, drag to pan. Click legend squares to isolate one or more groups. Click a county to see its industry mix.</p>
+      <p class="note">Scroll, pinch or use the + and − buttons to zoom; drag to pan. Click legend squares to isolate one or more groups. Click a county to see its industry mix.</p>
     </section>
 
     <div class="drops">
