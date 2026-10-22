@@ -413,7 +413,7 @@ function placeTip(mx, my){
 }
 function moveTip(e){ const r = wrap.getBoundingClientRect(); placeTip(e.clientX - r.left, e.clientY - r.top); }
 function hideTip(){ hoverLine.attr("d", null); tip.hidden = true; }
-paths.on("pointerenter", (e,f) => { hoverLine.attr("d", path(f)); if (f.d) { showTip(f); moveTip(e); } else tip.hidden = true; })
+paths.on("pointerenter", (e,f) => { if (dragging) return; hoverLine.attr("d", path(f)); if (f.d) { showTip(f); moveTip(e); } else tip.hidden = true; })
      .on("pointermove", e => moveTip(e))
      .on("click", (e,f) => { if (f.d) setPinned(f.id); });
 svg.on("pointerleave", hideTip);
@@ -423,29 +423,84 @@ svg.on("pointerleave", hideTip);
 // on each side, so it can be moved clear of a panel but never pushed off-screen
 const K_MIN = 0.6, K_MAX = 40;
 const zin = document.getElementById("zin"), zout = document.getElementById("zout");
+// Gentler wheel steps than d3's default (0.002 per pixel of scroll), so one flick doesn't jump several levels
+const wheelDelta = e => -e.deltaY * (e.deltaMode === 1 ? 0.03 : e.deltaMode ? 0.6 : 0.0012) * (e.ctrlKey ? 10 : 1);
+let dragging = false, samples = [];
 const zoom = d3.zoom().scaleExtent([K_MIN,K_MAX]).translateExtent([[-340,-215],[1315,825]])
-  // Gentler wheel steps than d3's default (0.002 per pixel of scroll), so one flick doesn't jump several levels
-  .wheelDelta(e => -e.deltaY * (e.deltaMode === 1 ? 0.03 : e.deltaMode ? 0.6 : 0.0012) * (e.ctrlKey ? 10 : 1))
+  // The wheel is handled below so it can ease between steps; d3 handles drag and pinch
+  .filter(e => e.type !== "wheel" && !e.ctrlKey && !e.button)
   // A few pixels of hand jitter still counts as a click on a county, not a drag
   .clickDistance(4)
+  .on("start", e => {
+    const s = e.sourceEvent;
+    if (s && (s.type === "mousedown" || s.type === "touchstart")) { stopGlide(); samples = []; }
+  })
   .on("zoom", e => {
     g.attr("transform", e.transform);
     pat.attr("patternTransform", `scale(${1/e.transform.k}) rotate(45)`);
     zin.disabled = e.transform.k >= K_MAX - 1e-6;
     zout.disabled = e.transform.k <= K_MIN + 1e-6;
+    const s = e.sourceEvent;
+    if (s && (s.type === "mousemove" || s.type === "touchmove")) {
+      if (!dragging) { dragging = true; hideTip(); }
+      samples.push({t: performance.now(), x: e.transform.x, y: e.transform.y, k: e.transform.k});
+      if (samples.length > 6) samples.shift();
+    }
+  })
+  .on("end", e => {
+    const s = e.sourceEvent;
+    if (!dragging || (s && s.touches && s.touches.length)) return;
+    dragging = false;
+    fling();
   });
 // Starting view: 85% scale, centered, so the edges of the country peek out from under the floating panels
 const START_K = 0.85, START = d3.zoomIdentity.translate(975*(1-START_K)/2, 610*(1-START_K)/2).scale(START_K);
 svg.call(zoom).call(zoom.transform, START);
+
+// Glides: the wheel eases toward its target scale, and a released drag coasts to a stop
+let glide = 0, wheelK = null, wheelP = null;
+function stopGlide(){ cancelAnimationFrame(glide); glide = 0; wheelK = null; }
+svg.node().addEventListener("wheel", e => {
+  e.preventDefault();
+  if (glide && wheelK == null) stopGlide(); // a wheel turn cancels a coasting drag
+  const k = d3.zoomTransform(svg.node()).k;
+  wheelK = Math.max(K_MIN, Math.min(K_MAX, (wheelK ?? k) * Math.pow(2, wheelDelta(e))));
+  wheelP = d3.pointer(e, svg.node());
+  if (reduce) { svg.call(zoom.scaleTo, wheelK, wheelP); wheelK = null; return; }
+  if (!glide) glide = requestAnimationFrame(function step(){
+    const k = d3.zoomTransform(svg.node()).k, r = Math.log(wheelK / k);
+    // Close a fixed share of the remaining (log) distance each frame, so fast scrolling stays responsive
+    if (Math.abs(r) < 0.01) { svg.call(zoom.scaleTo, wheelK, wheelP); stopGlide(); return; }
+    svg.call(zoom.scaleTo, k * Math.exp(r * 0.6), wheelP);
+    glide = requestAnimationFrame(step);
+  });
+}, {passive: false});
+function fling(){
+  // Speed over the last ~100ms of the drag, ignoring pinches (where the scale changed)
+  const now = performance.now(), last = samples[samples.length-1];
+  const first = samples.find(p => now - p.t < 100 && p.k === last?.k);
+  if (reduce || !first || last.t - first.t < 10 || now - last.t > 50) return;
+  let dt0 = last.t - first.t, vx = (last.x - first.x) / dt0, vy = (last.y - first.y) / dt0, prev = now;
+  if (Math.hypot(vx, vy) < 0.3) return;
+  glide = requestAnimationFrame(function step(ts){
+    const dt = Math.min(ts - prev, 32); prev = ts;
+    const k = d3.zoomTransform(svg.node()).k;
+    svg.call(zoom.translateBy, vx * dt / k, vy * dt / k);
+    const decay = Math.exp(-dt / 100); vx *= decay; vy *= decay;
+    glide = Math.hypot(vx, vy) > 0.03 ? requestAnimationFrame(step) : 0;
+  });
+}
+
 function zoomTo(feat){
+  stopGlide();
   const [[x0,y0],[x1,y1]] = path.bounds(feat);
   const k = Math.min(40, 0.9/Math.max((x1-x0)/975,(y1-y0)/610));
   return svg.transition().duration(reduce?0:650).call(zoom.transform, d3.zoomIdentity.translate(487.5,305).scale(k).translate(-(x0+x1)/2,-(y0+y1)/2));
 }
-function zoomOut(){ svg.transition().duration(reduce?0:650).call(zoom.transform, START); }
+function zoomOut(){ stopGlide(); svg.transition().duration(reduce?0:650).call(zoom.transform, START); }
 // Zoom buttons step around the middle of the map; the reset button returns to the starting view without clearing selections
-zin.onclick = () => svg.transition().duration(reduce?0:250).call(zoom.scaleBy, 1.6);
-zout.onclick = () => svg.transition().duration(reduce?0:250).call(zoom.scaleBy, 1/1.6);
+zin.onclick = () => { stopGlide(); svg.transition().duration(reduce?0:250).call(zoom.scaleBy, 1.6); };
+zout.onclick = () => { stopGlide(); svg.transition().duration(reduce?0:250).call(zoom.scaleBy, 1/1.6); };
 document.getElementById("zfit").onclick = zoomOut;
 function focusCounty(id){
   const f = byId.get(id); if (!f) return;
